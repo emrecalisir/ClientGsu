@@ -3,6 +3,7 @@ package com.clientgsu.activity;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +27,15 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfRect;
+import org.opencv.core.Rect;
+import org.opencv.objdetect.CascadeClassifier;
 
 import com.clientgsu.data.RectangleFace;
 import com.example.clientgsu.R;
@@ -43,9 +53,11 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -54,52 +66,103 @@ public class MainActivity extends ActionBarActivity {
 
 	private static final int SELECT_PICTURE = 1;
 	private ImageView img1;
-	private ImageView img2;
 	private Bitmap bitmap;
 	private EditText textIp;
 	private TextView textTimestamp;
 	private List<RectangleFace> rectangleFaceList = null;
+	private Button buttonSend;
+	private Button buttonBrowse;
+	private Button buttonDoLocally;
 	InputStream inputStream = null;
 	BufferedInputStream bufferedInputStream = null;
-	Long startTime = 0L;
+	Long startSendImageTaskTime = 0L;
+	Long startDrawRectsTaskTime = 0L;
+	Long firstStartTime = 0L;
+
 	Long endTime = 0L;
 	InputStream byteInputStream = null;
 	ProgressDialog progress;
+	private CascadeClassifier faceDetector;
+
+	final String TAG = "Hello World";
+
+	private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
+		@Override
+		public void onManagerConnected(int status) {
+			switch (status) {
+			case LoaderCallbackInterface.SUCCESS: {
+				Log.i(TAG, "OpenCV loaded successfully");
+				// Create and set View
+				setContentView(R.layout.activity_main);
+			}
+				break;
+			default: {
+				super.onManagerConnected(status);
+			}
+				break;
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.i(TAG, "onCreate");
+		firstStartTime = System.currentTimeMillis() / 1000;
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		Log.i(TAG, "Trying to load OpenCV library");
+		if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_2, this,
+				mOpenCVCallBack)) {
+			Log.e(TAG, "Cannot connect to OpenCV Manager");
+		}
 
 		img1 = (ImageView) findViewById(R.id.ImageView01);
 
 		textIp = (EditText) findViewById(R.id.editText1);
 		textTimestamp = (TextView) findViewById(R.id.textView1);
-		findViewById(R.id.buttonBrowse).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						Intent intent = new Intent();
-						intent.setType("image/*");
-						intent.setAction(Intent.ACTION_GET_CONTENT);
-						startActivityForResult(
-								Intent.createChooser(intent, "Select Picture"),
-								SELECT_PICTURE);
-					}
-				});
-		findViewById(R.id.buttonSend).setOnClickListener(
-				new View.OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						new Thread() {
-							public void run() {
-								// TODO Run network requests here.
-								new SendImageTask().execute("");
-							}
-						}.start();
 
+		buttonSend = (Button) findViewById(R.id.buttonSend);
+		buttonBrowse = (Button) findViewById(R.id.buttonBrowse);
+		buttonDoLocally = (Button) findViewById(R.id.buttonDoLocally);
+
+		buttonBrowse.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent intent = new Intent();
+				intent.setType("image/*");
+				intent.setAction(Intent.ACTION_GET_CONTENT);
+				startActivityForResult(
+						Intent.createChooser(intent, "Select Picture"),
+						SELECT_PICTURE);
+			}
+		});
+		buttonSend.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				new Thread() {
+					public void run() {
+						// TODO Run network requests here.
+						new SendImageTask().execute("");
 					}
-				});
+				}.start();
+
+			}
+		});
+
+		buttonDoLocally.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				new Thread() {
+					public void run() {
+						// TODO Run network requests here.
+						new LocalProcessingTask().execute("");
+					}
+				}.start();
+
+			}
+		});
 
 	}
 
@@ -112,7 +175,6 @@ public class MainActivity extends ActionBarActivity {
 				try {
 					// stream =
 					// getContentResolver().openInputStream(data.getData());
-
 					inputStream = getContentResolver().openInputStream(
 							data.getData());
 					bufferedInputStream = new BufferedInputStream(inputStream);
@@ -162,34 +224,11 @@ public class MainActivity extends ActionBarActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void post(String url, List<NameValuePair> nameValuePairs) {
-		HttpClient httpClient = new DefaultHttpClient();
-
-		HttpPost httpPost = new HttpPost(textIp.getText()
-				+ ":8080/Calculate_Server/rest/imageChanger/post");
-
-		try {
-			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-			progress = ProgressDialog.show(this, "dialog title",
-				    "dialog message", true);
-			HttpResponse response = httpClient.execute(httpPost);
-			List<RectangleFace> result = null;
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
 	private class SendImageTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
-			startTime = System.currentTimeMillis() / 1000;
+
+			startSendImageTaskTime = System.currentTimeMillis() / 1000;
 
 			img1 = (ImageView) findViewById(R.id.ImageView01);
 
@@ -225,14 +264,19 @@ public class MainActivity extends ActionBarActivity {
 				entity.setContentType("application/json");
 				httpPost.setEntity(entity);
 
+				endTime = System.currentTimeMillis() / 1000;
+				System.out
+						.println("Total time of client-side image transmission operation: "
+								+ (endTime - startSendImageTaskTime) + " seconds");
+
 				HttpResponse response = httpClient.execute(httpPost);
+
+				startDrawRectsTaskTime = System.currentTimeMillis() / 1000;
 
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						response.getEntity().getContent()));
 
 				String line = "";
-				StringBuilder content = new StringBuilder();
-				List<String> list = new ArrayList<String>();
 				rectangleFaceList = new ArrayList<RectangleFace>();
 
 				RectangleFace rectangleFace = null;
@@ -300,6 +344,7 @@ public class MainActivity extends ActionBarActivity {
 					// stuff that updates ui
 
 					try {
+
 						Bitmap createBitmap = Bitmap.createBitmap(
 								img1.getWidth(), img1.getHeight(),
 								Config.ARGB_8888);
@@ -317,6 +362,12 @@ public class MainActivity extends ActionBarActivity {
 						}
 
 						img1.setImageBitmap(createBitmap);
+
+						endTime = System.currentTimeMillis() / 1000;
+
+						System.out
+						.println("Total time of client-side image transmission(send) operation: "
+								+ (endTime - startSendImageTaskTime) + " seconds");
 					} catch (Exception ex) {
 						System.out.println(ex);
 					}
@@ -329,13 +380,70 @@ public class MainActivity extends ActionBarActivity {
 
 			endTime = System.currentTimeMillis() / 1000;
 
-			System.out.println("UpdateImageTask completed");
-			System.out.println("All tasks are completed within "
-					+ (endTime - startTime) + " seconds");
-			Long diff = endTime - startTime;
-			textTimestamp.setText(diff.toString());
+			System.out
+					.println("Total time of client-side image retrieval and drawing operation: "
+							+ (endTime - startSendImageTaskTime) + " seconds");
+			System.out
+					.println("Total time of client-side image retrieval, send to server and client-side drawing operation: "
+							+ (endTime - firstStartTime) + " seconds");
+			textTimestamp.setText((int) (endTime - startSendImageTaskTime));
 
 		}
 
+	}
+
+	private class LocalProcessingTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+
+			File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+
+			File mCascadeFile = new File(cascadeDir,
+					"haarcascade_frontalface_alt.xml");
+
+			faceDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+
+			img1 = (ImageView) findViewById(R.id.ImageView01);
+
+			Bitmap bitmap = ((BitmapDrawable) img1.getDrawable()).getBitmap();
+
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+			// bitmap.recycle();
+
+			System.out.println("stream size=" + stream.size());
+
+			byte[] byte_arr = Arrays
+					.copyOf(stream.toByteArray(), stream.size());
+
+			Mat mat = new Mat(img1.getHeight(), img1.getWidth(), CvType.CV_8UC3);
+			mat.put(0, 0, byte_arr);
+
+			MatOfRect faceDetections = new MatOfRect();
+			System.out.println(String.format("Detected %s faces",
+					faceDetections.toArray().length));
+			faceDetector.detectMultiScale(mat, faceDetections);
+			RectangleFace rectangleFace = null;
+			for (Rect rect : faceDetections.toArray()) {
+				rectangleFace = new RectangleFace(rect.x, rect.x + rect.width,
+						rect.y, rect.y + rect.height);
+				rectangleFaceList.add(rectangleFace);
+
+			}
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			endTime = System.currentTimeMillis() / 1000;
+
+			System.out.println("LocalProcessingTask completed");
+			System.out.println("All tasks are completed within "
+					+ (endTime - startSendImageTaskTime) + " seconds");
+			Long diff = endTime - startSendImageTaskTime;
+			textTimestamp.setText(diff.toString());
+
+		}
 	}
 }

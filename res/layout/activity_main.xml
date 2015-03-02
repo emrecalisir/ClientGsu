@@ -19,16 +19,6 @@
         <requestFocus />
     </EditText>
 
-    <ImageView
-        android:id="@+id/ImageView01"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
-        android:layout_alignLeft="@+id/buttonSend"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="5dp"
-        android:scaleType="matrix"
-        android:src="@drawable/abc_ab_bottom_solid_dark_holo" />
-
     <Button
         android:id="@+id/buttonSend"
         style="?android:attr/buttonStyleSmall"
@@ -37,7 +27,6 @@
         android:layout_above="@+id/ImageView01"
         android:layout_alignRight="@+id/buttonBrowse"
         android:text="@string/lblButtonSend" />
-
     <Button
         android:id="@+id/buttonBrowse"
         style="?android:attr/buttonStyleSmall"
@@ -61,8 +50,26 @@
         android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/editText1"
-        android:layout_marginLeft="15dp"
+        android:layout_alignBaseline="@+id/textView2"
+        android:layout_alignBottom="@+id/textView2"
+        android:layout_marginLeft="17dp"
         android:layout_toRightOf="@+id/textView2" />
+
+    <Button
+        android:id="@+id/buttonDoLocally"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/textView2"
+        android:layout_below="@+id/buttonBrowse"
+        android:text="@string/lblButtonDoLocally" />
+
+    <ImageView
+        android:id="@+id/ImageView01"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_alignLeft="@+id/buttonSend"
+        android:layout_alignParentBottom="true"
+        android:scaleType="matrix" />
 
 </RelativeLayout>

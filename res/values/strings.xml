@@ -6,5 +6,6 @@
     <string name="lblButton">Enter Server IP</string>
     <string name="lblButtonBrowse">Browse Gallery</string>
     <string name="lblButtonSend">Send to Server</string>
+    <string name="lblButtonDoLocally">Process on Android</string>
     
 </resources>
