@@ -70,9 +70,7 @@ public class MainActivity extends ActionBarActivity {
 	private EditText textIp;
 	private TextView textTimestamp;
 	private List<RectangleFace> rectangleFaceList = null;
-	private Button buttonSend;
-	private Button buttonBrowse;
-	private Button buttonDoLocally;
+	private Long timeDiff = 0L;
 	InputStream inputStream = null;
 	BufferedInputStream bufferedInputStream = null;
 	Long startSendImageTaskTime = 0L;
@@ -104,65 +102,39 @@ public class MainActivity extends ActionBarActivity {
 		}
 	};
 
-	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		Log.i(TAG, "onCreate");
-		firstStartTime = System.currentTimeMillis() / 1000;
-
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-
-		Log.i(TAG, "Trying to load OpenCV library");
-		if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_2, this,
-				mOpenCVCallBack)) {
-			Log.e(TAG, "Cannot connect to OpenCV Manager");
-		}
 
 		img1 = (ImageView) findViewById(R.id.ImageView01);
 
 		textIp = (EditText) findViewById(R.id.editText1);
 		textTimestamp = (TextView) findViewById(R.id.textView1);
-
-		buttonSend = (Button) findViewById(R.id.buttonSend);
-		buttonBrowse = (Button) findViewById(R.id.buttonBrowse);
-		buttonDoLocally = (Button) findViewById(R.id.buttonDoLocally);
-
-		buttonBrowse.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Intent intent = new Intent();
-				intent.setType("image/*");
-				intent.setAction(Intent.ACTION_GET_CONTENT);
-				startActivityForResult(
-						Intent.createChooser(intent, "Select Picture"),
-						SELECT_PICTURE);
-			}
-		});
-		buttonSend.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				new Thread() {
-					public void run() {
-						// TODO Run network requests here.
-						new SendImageTask().execute("");
+		findViewById(R.id.buttonBrowse).setOnClickListener(
+				new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						Intent intent = new Intent();
+						intent.setType("image/*");
+						intent.setAction(Intent.ACTION_GET_CONTENT);
+						startActivityForResult(
+								Intent.createChooser(intent, "Select Picture"),
+								SELECT_PICTURE);
 					}
-				}.start();
+				});
+		findViewById(R.id.buttonSend).setOnClickListener(
+				new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						new Thread() {
+							public void run() {
+								// TODO Run network requests here.
+								new SendImageTask().execute("");
+							}
+						}.start();
 
-			}
-		});
-
-		buttonDoLocally.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				new Thread() {
-					public void run() {
-						// TODO Run network requests here.
-						new LocalProcessingTask().execute("");
 					}
-				}.start();
-
-			}
-		});
+				});
 
 	}
 
@@ -265,11 +237,18 @@ public class MainActivity extends ActionBarActivity {
 				httpPost.setEntity(entity);
 
 				endTime = System.currentTimeMillis() / 1000;
+				timeDiff = endTime - startSendImageTaskTime;
 				System.out
-						.println("Total time of client-side image transmission operation: "
-								+ (endTime - startSendImageTaskTime) + " seconds");
+						.println("timeDiff: client image to binary code lasted: "
+								+ timeDiff
+								+ " seconds");
 
 				HttpResponse response = httpClient.execute(httpPost);
+
+				startDrawRectsTaskTime = System.currentTimeMillis() / 1000;
+				timeDiff = startDrawRectsTaskTime - endTime;
+				System.out.println("timeDiff: server to client response time lasted: "
+						+ (timeDiff) + " seconds");
 
 				startDrawRectsTaskTime = System.currentTimeMillis() / 1000;
 
@@ -365,9 +344,13 @@ public class MainActivity extends ActionBarActivity {
 
 						endTime = System.currentTimeMillis() / 1000;
 
-						System.out
-						.println("Total time of client-side image transmission(send) operation: "
-								+ (endTime - startSendImageTaskTime) + " seconds");
+						timeDiff = endTime - startDrawRectsTaskTime;
+
+						System.out.println("timeDiff: client image drawing time lasted: "
+								+ (timeDiff)
+								+ " seconds");
+
+						
 					} catch (Exception ex) {
 						System.out.println(ex);
 					}
@@ -380,13 +363,11 @@ public class MainActivity extends ActionBarActivity {
 
 			endTime = System.currentTimeMillis() / 1000;
 
-			System.out
-					.println("Total time of client-side image retrieval and drawing operation: "
-							+ (endTime - startSendImageTaskTime) + " seconds");
-			System.out
-					.println("Total time of client-side image retrieval, send to server and client-side drawing operation: "
-							+ (endTime - firstStartTime) + " seconds");
-			textTimestamp.setText((int) (endTime - startSendImageTaskTime));
+			timeDiff = endTime - startSendImageTaskTime;
+			System.out.println("TimeDiff: total time for client to server face detection lasted: "
+					+ (timeDiff)
+					+ " seconds");
+			
 
 		}
 
@@ -442,7 +423,7 @@ public class MainActivity extends ActionBarActivity {
 			System.out.println("All tasks are completed within "
 					+ (endTime - startSendImageTaskTime) + " seconds");
 			Long diff = endTime - startSendImageTaskTime;
-			textTimestamp.setText(diff.toString());
+			textTimestamp.setText(String.valueOf(diff));
 
 		}
 	}
