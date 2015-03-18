@@ -335,9 +335,9 @@ int drawable abc_textfield_default_mtrl_alpha 0x7f02002f
 int drawable abc_textfield_search_activated_mtrl_alpha 0x7f020030
 int drawable abc_textfield_search_default_mtrl_alpha 0x7f020031
 int drawable abc_textfield_search_material 0x7f020032
-int drawable familyhome 0x7f020033
-int drawable happy20students1 0x7f020034
-int drawable ic_launcher 0x7f020035
+int drawable happy20students1 0x7f020033
+int drawable ic_launcher 0x7f020034
+int drawable myimage 0x7f020035
 int id ImageView01 0x7f060048
 int id action_bar 0x7f060034
 int id action_bar_activity_content 0x7f06001b

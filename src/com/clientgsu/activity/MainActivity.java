@@ -28,16 +28,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfRect;
-import org.opencv.core.Rect;
-import org.opencv.objdetect.CascadeClassifier;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -53,6 +43,7 @@ import android.media.FaceDetector;
 import android.media.FaceDetector.Face;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -76,81 +67,15 @@ public class MainActivity extends ActionBarActivity {
 	private Long timeDiff = 0L;
 	InputStream inputStream = null;
 	BufferedInputStream bufferedInputStream = null;
-	Long startSendImageTaskTime = 0L;
-	Long startDrawRectsTaskTime = 0L;
-	Long firstStartTime = 0L;
-	private MatOfRect faceDetections = null;
-	Long endTime = 0L;
+	private boolean isLocalProcessing = false;
+	Long aStartTime, aEndTime, cStartTime, cEndTime, dStartTime, dEndTime = 0L;
 	InputStream byteInputStream = null;
 	ProgressDialog progress;
-	private CascadeClassifier faceDetector;
 	final String TAG = "Hello World";
 
 	private FaceDetector myFaceDetect;
 	private FaceDetector.Face[] faces;
-
-	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-		@Override
-		public void onManagerConnected(int status) {
-			if (faceDetector != null)
-				return;
-
-			switch (status) {
-			case LoaderCallbackInterface.SUCCESS: {
-				Log.i(TAG, "OpenCV loaded successfully");
-
-				try {
-					if (faceDetector != null)
-						return;
-					InputStream is = getResources().openRawResource(
-							R.raw.haarcascade_frontalface_alt);
-					File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-					File cascadeFile = new File(cascadeDir,
-							"haarcascade_frontalface_alt.xml");
-
-					FileOutputStream os = new FileOutputStream(cascadeFile);
-
-					byte[] buffer = new byte[4096];
-					int bytesRead;
-					while ((bytesRead = is.read(buffer)) != -1) {
-						os.write(buffer, 0, bytesRead);
-					}
-					is.close();
-					os.close();
-
-					faceDetector = new CascadeClassifier(
-							cascadeFile.getAbsolutePath());
-
-					if (faceDetector.empty()) {
-						Log.e("TAG", "Failed to load cascade classifier");
-						faceDetector = null;
-					} else
-						Log.i("TAG", "Loaded cascade classifier from "
-								+ cascadeFile.getAbsolutePath());
-
-					cascadeFile.delete();
-					cascadeDir.delete();
-
-				} catch (Exception ex) {
-					Log.i(TAG,
-							"Exception occurred while gatherin cascade classifier");
-				}
-			}
-				break;
-			default: {
-				super.onManagerConnected(status);
-			}
-				break;
-			}
-		}
-	};
-
-	@Override
-	public void onResume() {
-		super.onResume();
-		OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this,
-				mLoaderCallback);
-	}
+	int countTask = 0;
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -209,8 +134,6 @@ public class MainActivity extends ActionBarActivity {
 					bitmap.recycle();
 				}
 				try {
-					// stream =
-					// getContentResolver().openInputStream(data.getData());
 					inputStream = getContentResolver().openInputStream(
 							data.getData());
 					bufferedInputStream = new BufferedInputStream(inputStream);
@@ -224,16 +147,13 @@ public class MainActivity extends ActionBarActivity {
 						bufferedInputStream.close();
 					}
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				try {
 					inputStream.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -264,7 +184,9 @@ public class MainActivity extends ActionBarActivity {
 
 		protected Boolean doInBackground(String... string) {
 
-			startSendImageTaskTime = System.currentTimeMillis() / 1000;
+			countTask++;
+
+			aStartTime = System.currentTimeMillis();
 
 			img1 = (ImageView) findViewById(R.id.ImageView01);
 
@@ -272,9 +194,6 @@ public class MainActivity extends ActionBarActivity {
 
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-			// bitmap.recycle();
-
-			System.out.println("stream size=" + stream.size());
 
 			byte[] byte_arr = Arrays
 					.copyOf(stream.toByteArray(), stream.size());
@@ -300,21 +219,11 @@ public class MainActivity extends ActionBarActivity {
 				entity.setContentType("application/json");
 				httpPost.setEntity(entity);
 
-				endTime = System.currentTimeMillis() / 1000;
-				timeDiff = endTime - startSendImageTaskTime;
-				System.out
-						.println("timeDiff: client image to binary code lasted: "
-								+ timeDiff + " seconds");
+				aEndTime = System.currentTimeMillis();
 
 				HttpResponse response = httpClient.execute(httpPost);
 
-				startDrawRectsTaskTime = System.currentTimeMillis() / 1000;
-				timeDiff = startDrawRectsTaskTime - endTime;
-				System.out
-						.println("timeDiff: server to client response time lasted: "
-								+ (timeDiff) + " seconds");
-
-				startDrawRectsTaskTime = System.currentTimeMillis() / 1000;
+				cStartTime = System.currentTimeMillis();
 
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						response.getEntity().getContent()));
@@ -338,20 +247,11 @@ public class MainActivity extends ActionBarActivity {
 					}
 				}
 
-				/*
-				 * if (response.getStatusLine().getStatusCode() != 201) { throw
-				 * new RuntimeException("Failed : HTTP error code : " +
-				 * response.getStatusLine().getStatusCode()); }
-				 */
-
 			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (ClientProtocolException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -364,7 +264,7 @@ public class MainActivity extends ActionBarActivity {
 		}
 
 		protected void onPostExecute(Boolean doInBackground) {
-			System.out.println("SendImageTask completed");
+			System.out.println("a Task completed");
 
 			new Thread() {
 				public void run() {
@@ -397,7 +297,10 @@ public class MainActivity extends ActionBarActivity {
 						Paint p = new Paint();
 						p.setColor(Color.GREEN);
 						p.setStyle(Paint.Style.STROKE);
+						int i = 0;
+
 						for (RectangleFace rectangleFace : rectangleFaceList) {
+							i++;
 							canvas.drawRect(rectangleFace.getX1(),
 									rectangleFace.getY1(),
 									rectangleFace.getX2(),
@@ -405,14 +308,6 @@ public class MainActivity extends ActionBarActivity {
 						}
 
 						img1.setImageBitmap(createBitmap);
-
-						endTime = System.currentTimeMillis() / 1000;
-
-						timeDiff = endTime - startDrawRectsTaskTime;
-
-						System.out
-								.println("timeDiff: client image drawing time lasted: "
-										+ (timeDiff) + " seconds");
 
 					} catch (Exception ex) {
 						System.out.println(ex);
@@ -424,13 +319,21 @@ public class MainActivity extends ActionBarActivity {
 
 		protected void onPostExecute(Boolean doInBackground) {
 
-			endTime = System.currentTimeMillis() / 1000;
+			if (!isLocalProcessing) {
+				cEndTime = System.currentTimeMillis();
 
-			timeDiff = endTime - startSendImageTaskTime;
-			System.out
-					.println("TimeDiff: total time for client to server face detection lasted: "
-							+ (timeDiff) + " seconds");
+				Log.d("Result of Server-side processing: ", "Count = "
+						+ countTask + " time lasted: [(" + aStartTime + ","
+						+ aEndTime + ")" + (aEndTime - aStartTime) + " ms],[("
+						+ cStartTime + "," + cEndTime + ")="
+						+ (cEndTime - cStartTime) + " ms ]");
+			} else {
+				dEndTime = System.currentTimeMillis();
 
+				Log.d("Result of Client-side processing: ", "Count = "
+						+ countTask + " time lasted: [(" + dStartTime + ","
+						+ dEndTime + ")" + (dEndTime - dStartTime) + " ms]");
+			}
 		}
 
 	}
@@ -441,6 +344,7 @@ public class MainActivity extends ActionBarActivity {
 
 			try {
 
+				dStartTime = System.currentTimeMillis();
 				img1 = (ImageView) findViewById(R.id.ImageView01);
 
 				Bitmap bitmap = ((BitmapDrawable) img1.getDrawable())
@@ -455,6 +359,8 @@ public class MainActivity extends ActionBarActivity {
 				// getting new heights
 				int height = bitmap.getHeight();
 				int width = bitmap.getWidth();
+				Log.d("initial size: ", "height: " + height + " width: "
+						+ width);
 
 				// config arrangements
 				Bitmap bitmap565 = Bitmap.createBitmap(width, height,
@@ -475,6 +381,22 @@ public class MainActivity extends ActionBarActivity {
 				faces = new FaceDetector.Face[5];
 				myFaceDetect = new FaceDetector(width, height, 5);
 				int facesFound = myFaceDetect.findFaces(bitmap565, faces);
+				height = bitmap565.getHeight();
+				width = bitmap565.getWidth();
+				Log.d("new size: ", "height: " + height + " width: " + width);
+
+				String file_path = Environment.getExternalStorageDirectory()
+						.getAbsolutePath() + "/PhysicsSketchpad";
+				File dir = new File(file_path);
+				if (!dir.exists())
+					dir.mkdirs();
+				File file = new File(dir, "sketch.png");
+				FileOutputStream fOut = new FileOutputStream(file);
+
+				bitmap565.compress(Bitmap.CompressFormat.PNG, 85, fOut);
+				fOut.flush();
+				fOut.close();
+
 				Log.d("Face_Detection",
 						"Face Count: " + String.valueOf(facesFound));
 
@@ -489,10 +411,9 @@ public class MainActivity extends ActionBarActivity {
 				float myEyesDistance;
 				RectangleFace rectangleFace = null;
 				rectangleFaceList = new ArrayList<RectangleFace>();
+				PointF myMidPoint = new PointF();
 
 				for (FaceDetector.Face detectedFace : faces) {
-
-					PointF myMidPoint = new PointF();
 
 					detectedFace.getMidPoint(myMidPoint);
 
@@ -500,8 +421,8 @@ public class MainActivity extends ActionBarActivity {
 
 					rectangleFace = new RectangleFace(
 							(int) (myMidPoint.x - myEyesDistance),
-							(int) (myMidPoint.y - myEyesDistance),
 							(int) (myMidPoint.x + myEyesDistance),
+							(int) (myMidPoint.y - myEyesDistance),
 							(int) (myMidPoint.y + myEyesDistance));
 					rectangleFaceList.add(rectangleFace);
 				}
@@ -520,19 +441,10 @@ public class MainActivity extends ActionBarActivity {
 			new Thread() {
 				public void run() {
 					// TODO Run network requests here.
+					isLocalProcessing = true;
 					new UpdateImageTask().execute("");
 				}
 			}.start();
-			/*
-			 * int length = faceDetections.toArray().length;
-			 * textTimestamp.setText("Detected Faces: " + length); if (length >
-			 * 0) { endTime = System.currentTimeMillis() / 1000;
-			 * System.out.println("LocalProcessingTask completed");
-			 * System.out.println("All tasks are completed within " + (endTime -
-			 * startSendImageTaskTime) + " seconds"); Long diff = endTime -
-			 * startSendImageTaskTime;
-			 * textTimestamp.setText(String.valueOf(diff)); }
-			 */
 
 		}
 	}
