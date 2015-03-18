@@ -47,7 +47,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
+import android.media.FaceDetector;
+import android.media.FaceDetector.Face;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -83,18 +86,21 @@ public class MainActivity extends ActionBarActivity {
 	private CascadeClassifier faceDetector;
 	final String TAG = "Hello World";
 
+	private FaceDetector myFaceDetect;
+	private FaceDetector.Face[] faces;
+
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 		@Override
 		public void onManagerConnected(int status) {
-			if(faceDetector!=null)
+			if (faceDetector != null)
 				return;
-			
+
 			switch (status) {
 			case LoaderCallbackInterface.SUCCESS: {
 				Log.i(TAG, "OpenCV loaded successfully");
 
 				try {
-					if(faceDetector!=null)
+					if (faceDetector != null)
 						return;
 					InputStream is = getResources().openRawResource(
 							R.raw.haarcascade_frontalface_alt);
@@ -111,19 +117,19 @@ public class MainActivity extends ActionBarActivity {
 					}
 					is.close();
 					os.close();
-					
-				        
+
 					faceDetector = new CascadeClassifier(
 							cascadeFile.getAbsolutePath());
 
-					  if (faceDetector.empty()) {
-			                Log.e("TAG", "Failed to load cascade classifier");
-			                faceDetector = null;
-			        } else
-			            Log.i("TAG", "Loaded cascade classifier from " + cascadeFile.getAbsolutePath());
+					if (faceDetector.empty()) {
+						Log.e("TAG", "Failed to load cascade classifier");
+						faceDetector = null;
+					} else
+						Log.i("TAG", "Loaded cascade classifier from "
+								+ cascadeFile.getAbsolutePath());
 
-			        cascadeFile.delete();
-			        cascadeDir.delete();
+					cascadeFile.delete();
+					cascadeDir.delete();
 
 				} catch (Exception ex) {
 					Log.i(TAG,
@@ -433,7 +439,6 @@ public class MainActivity extends ActionBarActivity {
 
 		protected Boolean doInBackground(String... string) {
 
-			Mat mat = null;
 			try {
 
 				img1 = (ImageView) findViewById(R.id.ImageView01);
@@ -441,34 +446,66 @@ public class MainActivity extends ActionBarActivity {
 				Bitmap bitmap = ((BitmapDrawable) img1.getDrawable())
 						.getBitmap();
 
-				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-				// bitmap.recycle();
-
-				System.out.println("stream size=" + stream.size());
-
-				byte[] byte_arr = Arrays.copyOf(stream.toByteArray(),
-						stream.size());
-				stream = null;
-				int bHeight = bitmap.getHeight();
-				int bWidth = bitmap.getWidth();
-				bitmap=null;
-				System.gc();
-				
-				mat = new Mat(bHeight, bWidth, CvType.CV_8UC3);
-				mat.put(0, 0, byte_arr);
-				MatOfRect faceDetections = new MatOfRect();
-
-				faceDetector.detectMultiScale(mat, faceDetections);
-				System.out.println(String.format("Detected %s faces",
-						faceDetections.toArray().length));
-				RectangleFace rectangleFace = null;
-				for (Rect rect : faceDetections.toArray()) {
-					rectangleFace = new RectangleFace(rect.x, rect.x
-							+ rect.width, rect.y, rect.y + rect.height);
-					rectangleFaceList.add(rectangleFace);
-
+				// if bitmap width is even, then resize to enable face detection
+				if ((1 == (bitmap.getWidth() % 2))) {
+					bitmap = Bitmap.createScaledBitmap(bitmap,
+							bitmap.getWidth() + 1, bitmap.getHeight(), false);
 				}
+
+				// getting new heights
+				int height = bitmap.getHeight();
+				int width = bitmap.getWidth();
+
+				// config arrangements
+				Bitmap bitmap565 = Bitmap.createBitmap(width, height,
+						Config.RGB_565);
+
+				Paint ditherPaint = new Paint();
+				Paint drawPaint = new Paint();
+
+				ditherPaint.setDither(true);
+				drawPaint.setColor(Color.RED);
+				drawPaint.setStyle(Paint.Style.STROKE);
+				drawPaint.setStrokeWidth(2);
+
+				Canvas canvas = new Canvas();
+				canvas.setBitmap(bitmap565);
+				canvas.drawBitmap(bitmap, 0, 0, ditherPaint);
+
+				faces = new FaceDetector.Face[5];
+				myFaceDetect = new FaceDetector(width, height, 5);
+				int facesFound = myFaceDetect.findFaces(bitmap565, faces);
+				Log.d("Face_Detection",
+						"Face Count: " + String.valueOf(facesFound));
+
+				Bitmap createBitmap = Bitmap.createBitmap(img1.getWidth(),
+						img1.getHeight(), Config.ARGB_8888);
+				Canvas canvas1 = new Canvas(createBitmap);
+				img1.draw(canvas1);
+
+				Paint p = new Paint();
+				p.setColor(Color.GREEN);
+				p.setStyle(Paint.Style.STROKE);
+				float myEyesDistance;
+				RectangleFace rectangleFace = null;
+				rectangleFaceList = new ArrayList<RectangleFace>();
+
+				for (FaceDetector.Face detectedFace : faces) {
+
+					PointF myMidPoint = new PointF();
+
+					detectedFace.getMidPoint(myMidPoint);
+
+					myEyesDistance = detectedFace.eyesDistance();
+
+					rectangleFace = new RectangleFace(
+							(int) (myMidPoint.x - myEyesDistance),
+							(int) (myMidPoint.y - myEyesDistance),
+							(int) (myMidPoint.x + myEyesDistance),
+							(int) (myMidPoint.y + myEyesDistance));
+					rectangleFaceList.add(rectangleFace);
+				}
+
 			} catch (Exception ex) {
 				System.out.println("Error occurred: " + ex.toString());
 			}
@@ -478,16 +515,26 @@ public class MainActivity extends ActionBarActivity {
 
 		protected void onPostExecute(Boolean doInBackground) {
 
-			int length = faceDetections.toArray().length;
-			textTimestamp.setText("Detected Faces: " + length);
-			if (length > 0) {
-				endTime = System.currentTimeMillis() / 1000;
-				System.out.println("LocalProcessingTask completed");
-				System.out.println("All tasks are completed within "
-						+ (endTime - startSendImageTaskTime) + " seconds");
-				Long diff = endTime - startSendImageTaskTime;
-				textTimestamp.setText(String.valueOf(diff));
-			}
+			System.out.println("SendImageTask completed");
+
+			new Thread() {
+				public void run() {
+					// TODO Run network requests here.
+					new UpdateImageTask().execute("");
+				}
+			}.start();
+			/*
+			 * int length = faceDetections.toArray().length;
+			 * textTimestamp.setText("Detected Faces: " + length); if (length >
+			 * 0) { endTime = System.currentTimeMillis() / 1000;
+			 * System.out.println("LocalProcessingTask completed");
+			 * System.out.println("All tasks are completed within " + (endTime -
+			 * startSendImageTaskTime) + " seconds"); Long diff = endTime -
+			 * startSendImageTaskTime;
+			 * textTimestamp.setText(String.valueOf(diff)); }
+			 */
+
 		}
 	}
+
 }
