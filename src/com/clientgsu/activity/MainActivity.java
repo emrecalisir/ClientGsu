@@ -62,7 +62,7 @@ public class MainActivity extends ActionBarActivity {
 	private ImageView img1;
 	private Bitmap bitmap;
 	private EditText textIp;
-	private TextView textA1, textC1, textD1, textTotal;
+	private TextView textA1, textB1, textC1, textD1, textTotal;
 	private List<RectangleFace> rectangleFaceList = null;
 	private Long timeDiff = 0L;
 	InputStream inputStream = null;
@@ -72,7 +72,7 @@ public class MainActivity extends ActionBarActivity {
 	InputStream byteInputStream = null;
 	ProgressDialog progress;
 	final String TAG = "Hello World";
-
+	private String serverTimeLasted = null;
 	private FaceDetector myFaceDetect;
 	private FaceDetector.Face[] faces;
 	int countTask = 0;
@@ -85,6 +85,7 @@ public class MainActivity extends ActionBarActivity {
 
 		textIp = (EditText) findViewById(R.id.editText1);
 		textA1 = (TextView) findViewById(R.id.TextViewA1);
+		textB1 = (TextView) findViewById(R.id.TextViewB1);
 		textC1 = (TextView) findViewById(R.id.TextViewC1);
 		textD1 = (TextView) findViewById(R.id.TextViewD1);
 		textTotal = (TextView) findViewById(R.id.TextViewTotal);
@@ -187,6 +188,8 @@ public class MainActivity extends ActionBarActivity {
 
 		protected Boolean doInBackground(String... string) {
 
+			isLocalProcessing = false;
+			
 			countTask++;
 
 			aStartTime = System.currentTimeMillis();
@@ -235,11 +238,12 @@ public class MainActivity extends ActionBarActivity {
 				rectangleFaceList = new ArrayList<RectangleFace>();
 
 				RectangleFace rectangleFace = null;
-
+				JSONObject jsonObject = null;
+				JSONArray array = null;
 				while (null != (line = br.readLine())) {
-					JSONArray array = new JSONArray(line);
-					for (int i = 0; i < array.length(); i++) {
-						JSONObject jsonObject = array.getJSONObject(i);
+					array = new JSONArray(line);
+					for (int i = 0; i < array.length() - 1; i++) {
+						jsonObject = array.getJSONObject(i);
 						rectangleFace = new RectangleFace(
 								jsonObject.getInt("x1"),
 								jsonObject.getInt("x2"),
@@ -248,8 +252,12 @@ public class MainActivity extends ActionBarActivity {
 						rectangleFaceList.add(rectangleFace);
 
 					}
-				}
+					// last element in the jsonArray is "server lasted time"
+					// information
+					jsonObject = array.getJSONObject(array.length() - 1);
+					serverTimeLasted = jsonObject.getString("serverTimeLasted");
 
+				}
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			} catch (ClientProtocolException e) {
@@ -330,6 +338,7 @@ public class MainActivity extends ActionBarActivity {
 				// Log.d("Total lasted:", cEndTime - aStartTime + " ms");
 
 				textA1.setText("a1: " + (aEndTime - aStartTime) + " ms");
+				textB1.setText("b1: " + serverTimeLasted + " ms");
 				textC1.setText("c1: " + (cEndTime - cStartTime) + " ms");
 				textTotal.setText("Total: " + (cEndTime - aStartTime) + " ms");
 
@@ -359,7 +368,8 @@ public class MainActivity extends ActionBarActivity {
 		protected Boolean doInBackground(String... string) {
 
 			try {
-
+				isLocalProcessing = true;
+				
 				dStartTime = System.currentTimeMillis();
 				img1 = (ImageView) findViewById(R.id.ImageView01);
 
@@ -457,7 +467,6 @@ public class MainActivity extends ActionBarActivity {
 			new Thread() {
 				public void run() {
 					// TODO Run network requests here.
-					isLocalProcessing = true;
 					new UpdateImageTask().execute("");
 				}
 			}.start();
