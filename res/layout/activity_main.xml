@@ -46,32 +46,68 @@
         android:layout_marginTop="90dp"
         android:text="@string/lblButtonDoLocally" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/editText1"
-        android:layout_alignBottom="@+id/editText1"
-        android:layout_marginLeft="19dp"
-        android:layout_toRightOf="@+id/editText1"
-        android:text="Seconds: " />
-
-    <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/textView2"
-        android:layout_alignBottom="@+id/textView2"
-        android:layout_marginLeft="17dp"
-        android:layout_toRightOf="@+id/textView2" />
-
     <ImageView
         android:id="@+id/ImageView01"
         android:layout_width="300dp"
         android:layout_height="300dp"
         android:layout_alignLeft="@+id/buttonSend"
-                android:layout_marginTop="150dp"
-        
+        android:layout_marginTop="150dp"
         android:scaleType="matrix" />
+
+    <TextView
+        android:id="@+id/TextViewServer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="160dp"
+        android:layout_marginTop="10dp"
+        android:text="SERVER" />
+    
+    <TextView
+        android:id="@+id/TextViewServer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="240dp"
+        android:layout_marginTop="10dp"
+        android:text="CLIENT" />
+        
+    <TextView
+        android:id="@+id/TextViewA1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="160dp"
+        android:layout_marginTop="30dp"
+        android:text="a1" />
+
+        <TextView
+        android:id="@+id/TextViewD1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="240dp"
+        android:layout_marginTop="30dp"
+        android:text="d1" />
+    
+    <TextView
+        android:id="@+id/TextViewC1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="160dp"
+        android:layout_marginTop="50dp"
+        android:text="c1" />
+
+    <TextView
+        android:id="@+id/TextViewTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="160dp"
+        android:layout_marginTop="70dp"
+        android:text="total" />
 
 </RelativeLayout>

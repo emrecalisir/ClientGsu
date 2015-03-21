@@ -62,7 +62,7 @@ public class MainActivity extends ActionBarActivity {
 	private ImageView img1;
 	private Bitmap bitmap;
 	private EditText textIp;
-	private TextView textTimestamp;
+	private TextView textA1, textC1, textD1, textTotal;
 	private List<RectangleFace> rectangleFaceList = null;
 	private Long timeDiff = 0L;
 	InputStream inputStream = null;
@@ -84,7 +84,10 @@ public class MainActivity extends ActionBarActivity {
 		img1 = (ImageView) findViewById(R.id.ImageView01);
 
 		textIp = (EditText) findViewById(R.id.editText1);
-		textTimestamp = (TextView) findViewById(R.id.textView1);
+		textA1 = (TextView) findViewById(R.id.TextViewA1);
+		textC1 = (TextView) findViewById(R.id.TextViewC1);
+		textD1 = (TextView) findViewById(R.id.TextViewD1);
+		textTotal = (TextView) findViewById(R.id.TextViewTotal);
 		findViewById(R.id.buttonBrowse).setOnClickListener(
 				new View.OnClickListener() {
 					@Override
@@ -322,17 +325,30 @@ public class MainActivity extends ActionBarActivity {
 			if (!isLocalProcessing) {
 				cEndTime = System.currentTimeMillis();
 
-				Log.d("Result of Server-side processing: ", "Count = "
-						+ countTask + " time lasted: [(" + aStartTime + ","
-						+ aEndTime + ")" + (aEndTime - aStartTime) + " ms],[("
-						+ cStartTime + "," + cEndTime + ")="
-						+ (cEndTime - cStartTime) + " ms ]");
+				// Log.d("a1 lasted:", aEndTime - aStartTime + " ms");
+				// Log.d("c1 lasted:", cEndTime - cStartTime + " ms");
+				// Log.d("Total lasted:", cEndTime - aStartTime + " ms");
+
+				textA1.setText("a1: " + (aEndTime - aStartTime) + " ms");
+				textC1.setText("c1: " + (cEndTime - cStartTime) + " ms");
+				textTotal.setText("Total: " + (cEndTime - aStartTime) + " ms");
+
+				/*
+				 * Log.d("Result of Server-side processing: ", "Count = " +
+				 * countTask + " time lasted: [(" + aStartTime + "," + aEndTime
+				 * + ")" + (aEndTime - aStartTime) + " ms],[(" + cStartTime +
+				 * "," + cEndTime + ")=" + (cEndTime - cStartTime) + " ms ]");
+				 */
 			} else {
 				dEndTime = System.currentTimeMillis();
+				// Log.d("d1:", dEndTime - dStartTime + " ms");
+				textD1.setText("d1: " + (dEndTime - dStartTime) + " ms");
 
-				Log.d("Result of Client-side processing: ", "Count = "
-						+ countTask + " time lasted: [(" + dStartTime + ","
-						+ dEndTime + ")" + (dEndTime - dStartTime) + " ms]");
+				/*
+				 * Log.d("Result of Client-side processing: ", "Count = " +
+				 * countTask + " time lasted: [(" + dStartTime + "," + dEndTime
+				 * + ")" + (dEndTime - dStartTime) + " ms]");
+				 */
 			}
 		}
 
