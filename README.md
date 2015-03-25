@@ -1,9 +1,8 @@
+## EMRE CALISIR ## emrecalisir@gmail.com ## GALATASARAY UNIVERSITY COMPUTER SCIENCE M.SC. #
+
 # ClientGsu
-Android client which offloads tasks via Rest api
+Android client which offloads tasks via REST api and JAVA RMI
 
-Client GSU
-
-Android client - 
 
 1. Install Android SDK for Windows. It includes Eclipse executable file. 
 
