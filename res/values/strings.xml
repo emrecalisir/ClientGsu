@@ -8,5 +8,6 @@
     <string name="lblButtonSend">To Server</string>
     <string name="lblButtonDoLocally">To Local</string>
     <string name="lblButtonCamera">Open Camera</string>
+    <string name="lblButtonSendRmi">Send RMI</string>
 
 </resources>

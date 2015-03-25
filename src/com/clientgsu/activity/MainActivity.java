@@ -2,7 +2,6 @@ package com.clientgsu.activity;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,7 +13,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
@@ -28,9 +26,14 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import lipermi.handler.CallHandler;
+import lipermi.net.Client;
+import android.app.ActivityManager;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -40,10 +43,13 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.FaceDetector;
-import android.media.FaceDetector.Face;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Looper;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -52,9 +58,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.os.BatteryManager;
+import android.os.PowerManager;
 
 import com.clientgsu.data.RectangleFace;
 import com.example.clientgsu.R;
+import com.geag.rmi.FaceDetectionRmiInterface;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -62,7 +72,8 @@ public class MainActivity extends ActionBarActivity {
 	private ImageView img1;
 	private Bitmap bitmap;
 	private EditText textIp;
-	private TextView textA1, textB1, textC1, textD1, textTotal;
+	private TextView textA1, textB1, textC1, textD1, textTotal,
+			textStartTimestamp, textEndTimestamp;
 	private List<RectangleFace> rectangleFaceList = null;
 	private Long timeDiff = 0L;
 	InputStream inputStream = null;
@@ -76,9 +87,23 @@ public class MainActivity extends ActionBarActivity {
 	private FaceDetector myFaceDetect;
 	private FaceDetector.Face[] faces;
 	int countTask = 0;
+	Long energyInitial = 0L;
+
+	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		getBatteryInfo();
+
+		/*
+		 * BatteryManager mBatteryManager = (BatteryManager)
+		 * this.getSystemService(BATTERY_SERVICE);
+		 * 
+		 * if(mBatteryManager==null) System.out.println("Battery Manager null");
+		 * energyInitial = mBatteryManager.getLongProperty(BatteryManager.
+		 * BATTERY_PROPERTY_ENERGY_COUNTER);
+		 * System.out.println("Remaining energy = " + energyInitial + "nWh");
+		 */
 		setContentView(R.layout.activity_main);
 		// System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		img1 = (ImageView) findViewById(R.id.ImageView01);
@@ -89,6 +114,8 @@ public class MainActivity extends ActionBarActivity {
 		textC1 = (TextView) findViewById(R.id.TextViewC1);
 		textD1 = (TextView) findViewById(R.id.TextViewD1);
 		textTotal = (TextView) findViewById(R.id.TextViewTotal);
+		textStartTimestamp = (TextView) findViewById(R.id.TextViewStartTimestamp);
+		textEndTimestamp = (TextView) findViewById(R.id.TextViewTotalFinalTimestamp);
 		findViewById(R.id.buttonBrowse).setOnClickListener(
 				new View.OnClickListener() {
 					@Override
@@ -115,6 +142,20 @@ public class MainActivity extends ActionBarActivity {
 					}
 				});
 
+		findViewById(R.id.buttonSendRmi).setOnClickListener(
+				new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						new Thread() {
+							public void run() {
+								// TODO Run network requests here.
+								new RmiTask().execute("");
+							}
+						}.start();
+
+					}
+				});
+
 		findViewById(R.id.buttonDoLocally).setOnClickListener(
 				new View.OnClickListener() {
 					@Override
@@ -128,7 +169,30 @@ public class MainActivity extends ActionBarActivity {
 
 					}
 				});
+	}
 
+	private void getBatteryInfo() {
+		BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+			int scale = -1;
+			int level = -1;
+			int voltage = -1;
+			int temp = -1;
+
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+				scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+				temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+				voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+				Log.e("BatteryManager", "level is " + level + "/" + scale
+						+ ", temp is " + temp + ", voltage is " + voltage);
+				System.out.println("BatteryManager level is " + level + "/"
+						+ scale + ", temp is " + temp + ", voltage is "
+						+ voltage);
+			}
+		};
+		IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+		registerReceiver(batteryReceiver, filter);
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -188,8 +252,11 @@ public class MainActivity extends ActionBarActivity {
 
 		protected Boolean doInBackground(String... string) {
 
+			System.out.println("Remaining energy = "
+					+ BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
+
 			isLocalProcessing = false;
-			
+
 			countTask++;
 
 			aStartTime = System.currentTimeMillis();
@@ -211,8 +278,14 @@ public class MainActivity extends ActionBarActivity {
 
 				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(
 						1);
+
+				/*
+				 * nameValuePairs.add(new BasicNameValuePair("imageContentData",
+				 * "test"));
+				 */
 				nameValuePairs.add(new BasicNameValuePair("imageContentData",
 						imageAsString));
+
 				HttpClient httpClient = new DefaultHttpClient();
 				HttpConnectionParams.setConnectionTimeout(
 						httpClient.getParams(), 100000);
@@ -227,6 +300,8 @@ public class MainActivity extends ActionBarActivity {
 
 				aEndTime = System.currentTimeMillis();
 
+				WifiManager mainWifiObj;
+				mainWifiObj = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 				HttpResponse response = httpClient.execute(httpPost);
 
 				cStartTime = System.currentTimeMillis();
@@ -263,6 +338,7 @@ public class MainActivity extends ActionBarActivity {
 			} catch (ClientProtocolException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
+				System.out.println("Server unaccessible");
 				e.printStackTrace();
 			}
 
@@ -341,6 +417,8 @@ public class MainActivity extends ActionBarActivity {
 				textB1.setText("b1: " + serverTimeLasted + " ms");
 				textC1.setText("c1: " + (cEndTime - cStartTime) + " ms");
 				textTotal.setText("Total: " + (cEndTime - aStartTime) + " ms");
+				textStartTimestamp.setText(String.valueOf(aStartTime));
+				textEndTimestamp.setText(String.valueOf(cEndTime));
 
 				/*
 				 * Log.d("Result of Server-side processing: ", "Count = " +
@@ -352,6 +430,8 @@ public class MainActivity extends ActionBarActivity {
 				dEndTime = System.currentTimeMillis();
 				// Log.d("d1:", dEndTime - dStartTime + " ms");
 				textD1.setText("d1: " + (dEndTime - dStartTime) + " ms");
+				textStartTimestamp.setText(String.valueOf(dStartTime));
+				textEndTimestamp.setText(String.valueOf(dEndTime));
 
 				/*
 				 * Log.d("Result of Client-side processing: ", "Count = " +
@@ -368,8 +448,11 @@ public class MainActivity extends ActionBarActivity {
 		protected Boolean doInBackground(String... string) {
 
 			try {
+				System.out.println("Remaining energy = "
+						+ BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
+
 				isLocalProcessing = true;
-				
+
 				dStartTime = System.currentTimeMillis();
 				img1 = (ImageView) findViewById(R.id.ImageView01);
 
@@ -471,6 +554,37 @@ public class MainActivity extends ActionBarActivity {
 				}
 			}.start();
 
+		}
+	}
+
+	private class RmiTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+			Looper.prepare();
+
+			try {
+				String serverIp = textIp.getText().toString();
+				CallHandler callHandler = new CallHandler();
+				Client client = new Client(serverIp, 7777, callHandler);
+				FaceDetectionRmiInterface faceDetectionRmiService = (FaceDetectionRmiInterface) client
+						.getGlobal(FaceDetectionRmiInterface.class);
+				String msg = faceDetectionRmiService.getResponse("qwe");
+				Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
+						.show();
+				client.close();
+			} catch (IOException ex) {
+				System.out.println("Error occurred: " + ex.toString());
+
+			} catch (Exception ex) {
+				System.out.println("Error occurred: " + ex.toString());
+			}
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("RmiTask completed");
 		}
 	}
 
