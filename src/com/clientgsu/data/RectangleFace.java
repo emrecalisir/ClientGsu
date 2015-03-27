@@ -1,7 +1,11 @@
 package com.clientgsu.data;
 
-public class RectangleFace {
+public class RectangleFace implements java.io.Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8486119553292460459L;
 	private int x1;
 	private int x2;
 	private int y1;

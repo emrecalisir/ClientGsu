@@ -64,7 +64,7 @@ import android.os.PowerManager;
 
 import com.clientgsu.data.RectangleFace;
 import com.example.clientgsu.R;
-import com.geag.rmi.FaceDetectionRmiInterface;
+import com.geag.rmi.GeagRmiInterface;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -79,7 +79,8 @@ public class MainActivity extends ActionBarActivity {
 	InputStream inputStream = null;
 	BufferedInputStream bufferedInputStream = null;
 	private boolean isLocalProcessing = false;
-	Long aStartTime, aEndTime, cStartTime, cEndTime, dStartTime, dEndTime = 0L;
+	Long aStartTime, aEndTime, cStartTime, cEndTime, dStartTime, dEndTime,
+			eStartTime, eEndTime = 0L;
 	InputStream byteInputStream = null;
 	ProgressDialog progress;
 	final String TAG = "Hello World";
@@ -88,6 +89,7 @@ public class MainActivity extends ActionBarActivity {
 	private FaceDetector.Face[] faces;
 	int countTask = 0;
 	Long energyInitial = 0L;
+	String imageRmiResponse = "";
 
 	// private BatteryManager mBatteryManager = null;
 
@@ -409,12 +411,12 @@ public class MainActivity extends ActionBarActivity {
 			if (!isLocalProcessing) {
 				cEndTime = System.currentTimeMillis();
 
-				// Log.d("a1 lasted:", aEndTime - aStartTime + " ms");
-				// Log.d("c1 lasted:", cEndTime - cStartTime + " ms");
-				// Log.d("Total lasted:", cEndTime - aStartTime + " ms");
+				 Log.d("a1 lasted:", aEndTime - aStartTime + " ms");
+				 Log.d("c1 lasted:", cEndTime - cStartTime + " ms");
+				 Log.d("Total lasted:", cEndTime - aStartTime + " ms");
 
 				textA1.setText("a1: " + (aEndTime - aStartTime) + " ms");
-				textB1.setText("b1: " + serverTimeLasted + " ms");
+				//textB1.setText("b1: " + serverTimeLasted + " ms");
 				textC1.setText("c1: " + (cEndTime - cStartTime) + " ms");
 				textTotal.setText("Total: " + (cEndTime - aStartTime) + " ms");
 				textStartTimestamp.setText(String.valueOf(aStartTime));
@@ -560,17 +562,49 @@ public class MainActivity extends ActionBarActivity {
 	private class RmiTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
+			aStartTime = System.currentTimeMillis();
+
 			Looper.prepare();
 
 			try {
 				String serverIp = textIp.getText().toString();
 				CallHandler callHandler = new CallHandler();
 				Client client = new Client(serverIp, 7777, callHandler);
-				FaceDetectionRmiInterface faceDetectionRmiService = (FaceDetectionRmiInterface) client
-						.getGlobal(FaceDetectionRmiInterface.class);
-				String msg = faceDetectionRmiService.getResponse("qwe");
-				Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT)
-						.show();
+				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
+						.getGlobal(GeagRmiInterface.class);
+
+				img1 = (ImageView) findViewById(R.id.ImageView01);
+
+				Bitmap bitmap = ((BitmapDrawable) img1.getDrawable())
+						.getBitmap();
+
+				ByteArrayOutputStream stream = new ByteArrayOutputStream();
+				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+
+				byte[] byte_arr = Arrays.copyOf(stream.toByteArray(),
+						stream.size());
+
+				byte[] imageByte = Base64.encodeBase64(byte_arr);
+
+				String imageAsString = new String(Hex.encodeHex(imageByte));
+
+				rectangleFaceList = new ArrayList<RectangleFace>();
+				RectangleFace rectFace = null;
+				aEndTime = System.currentTimeMillis();
+
+				String res = geagRmiService.getResponse(imageAsString);
+				cStartTime			 = System.currentTimeMillis();
+
+				String[] split = res.split(";");
+
+				for (String str : split) {
+					String[] split2 = str.split(",");
+					rectFace = new RectangleFace(Integer.parseInt(split2[0]),
+							Integer.parseInt(split2[1]),
+							Integer.parseInt(split2[2]),
+							Integer.parseInt(split2[3]));
+					rectangleFaceList.add(rectFace);
+				}
 				client.close();
 			} catch (IOException ex) {
 				System.out.println("Error occurred: " + ex.toString());
@@ -585,6 +619,14 @@ public class MainActivity extends ActionBarActivity {
 		protected void onPostExecute(Boolean doInBackground) {
 
 			System.out.println("RmiTask completed");
+
+			new Thread() {
+				public void run() {
+					// TODO Run network requests here.
+					new UpdateImageTask().execute("");
+				}
+			}.start();
+
 		}
 	}
 

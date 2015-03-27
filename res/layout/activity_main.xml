@@ -6,7 +6,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.clientgsu.activity.MainActivity" >
+    tools:context="com.clientgsu.activity.MainActivity" >	
 
     <EditText
         android:id="@+id/editText1"
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:ems="10"
-        android:text="192.168.2.187">
+        android:text="192.168.1.3">
     </EditText>
 
     <Button
