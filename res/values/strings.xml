@@ -5,9 +5,11 @@
     <string name="action_settings">Settings</string>
     <string name="lblButton">Enter Server IP</string>
     <string name="lblButtonBrowse">Browse</string>
-    <string name="lblButtonSend">To Server</string>
-    <string name="lblButtonDoLocally">To Local</string>
+    <string name="lblButtonSend">REST Offl.</string>
+    <string name="lblButtonDoLocally">Client Face Det.</string>
     <string name="lblButtonCamera">Open Camera</string>
-    <string name="lblButtonSendRmi">Send RMI</string>
+    <string name="lblButtonSendRmi">RMI Offl.</string>
+    <string name="lblButtonMultiplyMatrices">Client Multiply Mat. </string>
+    
 
 </resources>

@@ -1637,16 +1637,14 @@ containing a value of this type.
         public static final int myimage=0x7f020035;
     }
     public static final class id {
-        public static final int ImageView01=0x7f060044;
-        public static final int TextViewA1=0x7f060047;
-        public static final int TextViewB1=0x7f060048;
-        public static final int TextViewC1=0x7f06004a;
-        public static final int TextViewClient=0x7f060046;
-        public static final int TextViewD1=0x7f060049;
-        public static final int TextViewServer=0x7f060045;
-        public static final int TextViewStartTimestamp=0x7f06004c;
-        public static final int TextViewTotal=0x7f06004b;
-        public static final int TextViewTotalFinalTimestamp=0x7f06004d;
+        public static final int ImageView01=0x7f060047;
+        public static final int TextViewA1=0x7f060049;
+        public static final int TextViewB1=0x7f06004a;
+        public static final int TextViewC1=0x7f06004b;
+        public static final int TextViewClient=0x7f06004d;
+        public static final int TextViewD1=0x7f06004e;
+        public static final int TextViewServer=0x7f060048;
+        public static final int TextViewTotal=0x7f06004c;
         public static final int action_bar=0x7f060031;
         public static final int action_bar_activity_content=0x7f060018;
         public static final int action_bar_container=0x7f060030;
@@ -1660,16 +1658,17 @@ containing a value of this type.
         public static final int action_mode_bar=0x7f06002e;
         public static final int action_mode_bar_stub=0x7f06002d;
         public static final int action_mode_close_button=0x7f060020;
-        public static final int action_settings=0x7f060055;
+        public static final int action_settings=0x7f060056;
         public static final int activity_chooser_view_content=0x7f060021;
         public static final int always=0x7f06000d;
         public static final int beginning=0x7f060012;
-        public static final int button1=0x7f060053;
-        public static final int buttonBrowse=0x7f060040;
-        public static final int buttonCamera=0x7f060054;
+        public static final int button1=0x7f060054;
+        public static final int buttonBrowse=0x7f06003f;
+        public static final int buttonCamera=0x7f060055;
         public static final int buttonDoLocally=0x7f060043;
-        public static final int buttonSend=0x7f060042;
-        public static final int buttonSendRmi=0x7f060041;
+        public static final int buttonMultiplyMatrices=0x7f060044;
+        public static final int buttonSend=0x7f060045;
+        public static final int buttonSendRmi=0x7f060046;
         public static final int checkbox=0x7f060029;
         public static final int collapseActionView=0x7f06000f;
         public static final int decor_content_parent=0x7f06002f;
@@ -1677,7 +1676,9 @@ containing a value of this type.
         public static final int dialog=0x7f060010;
         public static final int disableHome=0x7f06000a;
         public static final int dropdown=0x7f060011;
-        public static final int editText1=0x7f06003f;
+        public static final int editText1=0x7f060040;
+        public static final int editTextCols=0x7f060042;
+        public static final int editTextRows=0x7f060041;
         public static final int edit_query=0x7f060033;
         public static final int end=0x7f060014;
         public static final int expand_activities_button=0x7f060022;
@@ -1696,10 +1697,10 @@ containing a value of this type.
         public static final int progress_circular=0x7f06001c;
         public static final int progress_horizontal=0x7f06001d;
         public static final int radio=0x7f06002b;
-        public static final int radioButton1=0x7f06004f;
-        public static final int radioButton2=0x7f060050;
-        public static final int radioButton3=0x7f060051;
-        public static final int radioButton4=0x7f060052;
+        public static final int radioButton1=0x7f060050;
+        public static final int radioButton2=0x7f060051;
+        public static final int radioButton3=0x7f060052;
+        public static final int radioButton4=0x7f060053;
         public static final int search_badge=0x7f060035;
         public static final int search_bar=0x7f060034;
         public static final int search_button=0x7f060036;
@@ -1717,7 +1718,7 @@ containing a value of this type.
         public static final int split_action_bar=0x7f060019;
         public static final int submit_area=0x7f06003c;
         public static final int tabMode=0x7f060003;
-        public static final int textView1=0x7f06004e;
+        public static final int textView1=0x7f06004f;
         public static final int title=0x7f060027;
         public static final int up=0x7f060016;
         public static final int useLogo=0x7f060005;
@@ -1850,6 +1851,7 @@ containing a value of this type.
         public static final int lblButtonBrowse=0x7f0b0013;
         public static final int lblButtonCamera=0x7f0b0016;
         public static final int lblButtonDoLocally=0x7f0b0015;
+        public static final int lblButtonMultiplyMatrices=0x7f0b0018;
         public static final int lblButtonSend=0x7f0b0014;
         public static final int lblButtonSendRmi=0x7f0b0017;
     }
