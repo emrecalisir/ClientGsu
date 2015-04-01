@@ -87,15 +87,15 @@ public class MainActivity extends ActionBarActivity {
 	private String serverTimeLasted = null;
 	private FaceDetector myFaceDetect;
 	private FaceDetector.Face[] faces;
-	int countTask = 0;
 	Long energyInitial = 0L;
 	String imageRmiResponse = "";
+	String exceptionText = "";
 
 	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		getBatteryInfo();
+		// getBatteryInfo();
 
 		/*
 		 * BatteryManager mBatteryManager = (BatteryManager)
@@ -217,14 +217,17 @@ public class MainActivity extends ActionBarActivity {
 						bufferedInputStream.close();
 					}
 				} catch (FileNotFoundException e) {
-					e.printStackTrace();
+					exceptionText = e.toString();
+					displayAlert();
 				} catch (IOException e) {
-					e.printStackTrace();
+					exceptionText = e.toString();
+					displayAlert();
 				}
 				try {
 					inputStream.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					exceptionText = e.toString();
+					displayAlert();
 				}
 
 			}
@@ -254,37 +257,21 @@ public class MainActivity extends ActionBarActivity {
 
 		protected Boolean doInBackground(String... string) {
 
-			System.out.println("Remaining energy = "
-					+ BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
-
+			// clearTextBoxValues();
+			/*
+			 * System.out.println("Remaining energy = " +
+			 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
+			 */
 			isLocalProcessing = false;
 
-			countTask++;
-
 			aStartTime = System.currentTimeMillis();
-
-			img1 = (ImageView) findViewById(R.id.ImageView01);
-
-			Bitmap bitmap = ((BitmapDrawable) img1.getDrawable()).getBitmap();
-
-			ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-
-			byte[] byte_arr = Arrays
-					.copyOf(stream.toByteArray(), stream.size());
-
-			byte[] imageByte = Base64.encodeBase64(byte_arr);
-
+			String imageAsString = "", line = "";
 			try {
-				String imageAsString = new String(Hex.encodeHex(imageByte));
+				imageAsString = prepareRawDataOfImage();
 
 				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(
 						1);
 
-				/*
-				 * nameValuePairs.add(new BasicNameValuePair("imageContentData",
-				 * "test"));
-				 */
 				nameValuePairs.add(new BasicNameValuePair("imageContentData",
 						imageAsString));
 
@@ -301,17 +288,15 @@ public class MainActivity extends ActionBarActivity {
 				httpPost.setEntity(entity);
 
 				aEndTime = System.currentTimeMillis();
-
-				WifiManager mainWifiObj;
-				mainWifiObj = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+				// WifiManager mainWifiObj;
+				// mainWifiObj = (WifiManager)
+				// getSystemService(Context.WIFI_SERVICE);
 				HttpResponse response = httpClient.execute(httpPost);
-
 				cStartTime = System.currentTimeMillis();
 
 				BufferedReader br = new BufferedReader(new InputStreamReader(
 						response.getEntity().getContent()));
 
-				String line = "";
 				rectangleFaceList = new ArrayList<RectangleFace>();
 
 				RectangleFace rectangleFace = null;
@@ -336,16 +321,18 @@ public class MainActivity extends ActionBarActivity {
 
 				}
 			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+				exceptionText = e.toString();
+				displayAlert();
 			} catch (ClientProtocolException e) {
-				e.printStackTrace();
+				exceptionText = e.toString();
 			} catch (IOException e) {
 				System.out.println("Server unaccessible");
-				e.printStackTrace();
-			}
-
-			catch (Exception e) {
-				e.printStackTrace();
+				exceptionText = e.toString();
+				displayAlert();
+			} catch (Exception e) {
+				System.out.println(line);
+				exceptionText = e.toString();
+				displayAlert();
 			}
 
 			return true;
@@ -353,11 +340,13 @@ public class MainActivity extends ActionBarActivity {
 		}
 
 		protected void onPostExecute(Boolean doInBackground) {
+
 			System.out.println("a Task completed");
 
 			new Thread() {
 				public void run() {
 					// TODO Run network requests here.
+
 					new UpdateImageTask().execute("");
 				}
 			}.start();
@@ -372,8 +361,6 @@ public class MainActivity extends ActionBarActivity {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-
-					// stuff that updates ui
 
 					try {
 
@@ -398,8 +385,9 @@ public class MainActivity extends ActionBarActivity {
 
 						img1.setImageBitmap(createBitmap);
 
-					} catch (Exception ex) {
-						System.out.println(ex);
+					} catch (Exception e) {
+						exceptionText = e.toString();
+						displayAlert();
 					}
 				}
 			});
@@ -410,24 +398,13 @@ public class MainActivity extends ActionBarActivity {
 
 			if (!isLocalProcessing) {
 				cEndTime = System.currentTimeMillis();
-
-				 Log.d("a1 lasted:", aEndTime - aStartTime + " ms");
-				 Log.d("c1 lasted:", cEndTime - cStartTime + " ms");
-				 Log.d("Total lasted:", cEndTime - aStartTime + " ms");
-
 				textA1.setText("a1: " + (aEndTime - aStartTime) + " ms");
-				//textB1.setText("b1: " + serverTimeLasted + " ms");
+				textB1.setText("b1: " + serverTimeLasted + " ms");
 				textC1.setText("c1: " + (cEndTime - cStartTime) + " ms");
 				textTotal.setText("Total: " + (cEndTime - aStartTime) + " ms");
 				textStartTimestamp.setText(String.valueOf(aStartTime));
 				textEndTimestamp.setText(String.valueOf(cEndTime));
 
-				/*
-				 * Log.d("Result of Server-side processing: ", "Count = " +
-				 * countTask + " time lasted: [(" + aStartTime + "," + aEndTime
-				 * + ")" + (aEndTime - aStartTime) + " ms],[(" + cStartTime +
-				 * "," + cEndTime + ")=" + (cEndTime - cStartTime) + " ms ]");
-				 */
 			} else {
 				dEndTime = System.currentTimeMillis();
 				// Log.d("d1:", dEndTime - dStartTime + " ms");
@@ -435,11 +412,6 @@ public class MainActivity extends ActionBarActivity {
 				textStartTimestamp.setText(String.valueOf(dStartTime));
 				textEndTimestamp.setText(String.valueOf(dEndTime));
 
-				/*
-				 * Log.d("Result of Client-side processing: ", "Count = " +
-				 * countTask + " time lasted: [(" + dStartTime + "," + dEndTime
-				 * + ")" + (dEndTime - dStartTime) + " ms]");
-				 */
 			}
 		}
 
@@ -450,9 +422,11 @@ public class MainActivity extends ActionBarActivity {
 		protected Boolean doInBackground(String... string) {
 
 			try {
-				System.out.println("Remaining energy = "
-						+ BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
-
+				// clearTextBoxValues();
+				/*
+				 * System.out.println("Remaining energy = " +
+				 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
+				 */
 				isLocalProcessing = true;
 
 				dStartTime = System.currentTimeMillis();
@@ -538,8 +512,9 @@ public class MainActivity extends ActionBarActivity {
 					rectangleFaceList.add(rectangleFace);
 				}
 
-			} catch (Exception ex) {
-				System.out.println("Error occurred: " + ex.toString());
+			} catch (Exception e) {
+				exceptionText = e.toString();
+				displayAlert();
 			}
 			return true;
 
@@ -562,6 +537,7 @@ public class MainActivity extends ActionBarActivity {
 	private class RmiTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
+			// clearTextBoxValues();
 			aStartTime = System.currentTimeMillis();
 
 			Looper.prepare();
@@ -573,44 +549,39 @@ public class MainActivity extends ActionBarActivity {
 				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
 						.getGlobal(GeagRmiInterface.class);
 
-				img1 = (ImageView) findViewById(R.id.ImageView01);
+				String imageAsString = prepareRawDataOfImage();
 
-				Bitmap bitmap = ((BitmapDrawable) img1.getDrawable())
-						.getBitmap();
-
-				ByteArrayOutputStream stream = new ByteArrayOutputStream();
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-
-				byte[] byte_arr = Arrays.copyOf(stream.toByteArray(),
-						stream.size());
-
-				byte[] imageByte = Base64.encodeBase64(byte_arr);
-
-				String imageAsString = new String(Hex.encodeHex(imageByte));
-
-				rectangleFaceList = new ArrayList<RectangleFace>();
-				RectangleFace rectFace = null;
 				aEndTime = System.currentTimeMillis();
 
 				String res = geagRmiService.getResponse(imageAsString);
-				cStartTime			 = System.currentTimeMillis();
+
+				cStartTime = System.currentTimeMillis();
+				rectangleFaceList = new ArrayList<RectangleFace>();
 
 				String[] split = res.split(";");
+				RectangleFace rectFace = null;
 
-				for (String str : split) {
-					String[] split2 = str.split(",");
-					rectFace = new RectangleFace(Integer.parseInt(split2[0]),
-							Integer.parseInt(split2[1]),
-							Integer.parseInt(split2[2]),
-							Integer.parseInt(split2[3]));
-					rectangleFaceList.add(rectFace);
+				String[] split2 = null;
+
+				for (int i = 0; i < split.length-1; i++) {
+					
+						split2 = split[i].split(",");
+						rectFace = new RectangleFace(
+								Integer.parseInt(split2[0]),
+								Integer.parseInt(split2[1]),
+								Integer.parseInt(split2[2]),
+								Integer.parseInt(split2[3]));
+						rectangleFaceList.add(rectFace);	
 				}
-				client.close();
-			} catch (IOException ex) {
-				System.out.println("Error occurred: " + ex.toString());
+				serverTimeLasted = split[split.length-1];				
 
-			} catch (Exception ex) {
-				System.out.println("Error occurred: " + ex.toString());
+				client.close();
+			} catch (IOException e) {
+				exceptionText = e.toString();
+				displayAlert();
+			} catch (Exception e) {
+				exceptionText = e.toString();
+				displayAlert();
 			}
 			return true;
 
@@ -628,6 +599,53 @@ public class MainActivity extends ActionBarActivity {
 			}.start();
 
 		}
+
 	}
 
+	private String prepareRawDataOfImage() {
+		img1 = (ImageView) findViewById(R.id.ImageView01);
+
+		Bitmap bitmap = ((BitmapDrawable) img1.getDrawable()).getBitmap();
+
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+
+		byte[] byte_arr = Arrays.copyOf(stream.toByteArray(), stream.size());
+
+		byte[] imageByte = Base64.encodeBase64(byte_arr);
+
+		String imageAsString = new String(Hex.encodeHex(imageByte));
+		return imageAsString;
+	}
+
+	public void displayAlert() {
+		MainActivity.this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(MainActivity.this, exceptionText, 10000).show();
+			}
+		});
+	}
+
+	/*
+	 * private class DisplayPopupTask extends AsyncTask<String, Void, Boolean> {
+	 * 
+	 * protected Boolean doInBackground(String... string) { runOnUiThread(new
+	 * Runnable() {
+	 * 
+	 * @Override public void run() {
+	 * 
+	 * // stuff that updates ui
+	 * 
+	 * try {
+	 * 
+	 * }
+	 * 
+	 * private void clearTextBoxValues() { textA1.setText("");
+	 * textB1.setText(""); textC1.setText(""); textD1.setText("");
+	 * textTotal.setText(""); textStartTimestamp.setText("");
+	 * textEndTimestamp.setText("");
+	 * 
+	 * }
+	 */
 }

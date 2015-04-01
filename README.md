@@ -14,4 +14,9 @@ Android client which offloads tasks via REST api and JAVA RMI
 
 Technically, the methods of the built-in framework Android Face Detector is used. 
 
-5. In the server-side offloading operations, the user selects any picture from client and send it to a specified IP to receive the exact coordinates of the pictures detected. After getting the response from the server, the client draws and displays it on UI. 
+5. In the server-side offloading operations, the user selects any picture from client and send it to a specified IP to receive the exact coordinates of the pictures detected. After getting the response from the server, the client draws and displays it on UI.
+
+Communication Types: 
+1. RMI: For the RMI operations, start or debug the project.
+2. REST: For the REST operations, start or debug the Apache Tomcat Server
+ 
