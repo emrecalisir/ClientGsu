@@ -28,6 +28,9 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.scilab.modules.javasci.Scilab;
+import org.scilab.modules.types.ScilabDouble;
+import org.scilab.modules.types.ScilabType;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -496,7 +499,7 @@ public class MainActivity extends ActionBarActivity {
 				File file = new File(dir, "sketch.png");
 				FileOutputStream fOut = new FileOutputStream(file);
 
-				bitmap565.compress(Bitmap.CompressFormat.PNG, 85, fOut);
+				bitmap565.compress(Bitmap.CompressFormat.PNG, 100, fOut);
 				fOut.flush();
 				fOut.close();
 
@@ -563,7 +566,7 @@ public class MainActivity extends ActionBarActivity {
 			try {
 				String serverIp = textIp.getText().toString();
 				CallHandler callHandler = new CallHandler();
-				Client client = new Client(serverIp, 7777, callHandler);
+				Client client = new Client(serverIp, 7779, callHandler);
 				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
 						.getGlobal(GeagRmiInterface.class);
 
@@ -571,7 +574,10 @@ public class MainActivity extends ActionBarActivity {
 
 				aEndTime = System.currentTimeMillis();
 
-				String res = geagRmiService.getResponse(imageAsString);
+				// String res = geagRmiService.getResponse(imageAsString);
+
+				String res = geagRmiService
+						.getResponseOfScientificOperation(imageAsString);
 
 				cStartTime = System.currentTimeMillis();
 				rectangleFaceList = new ArrayList<RectangleFace>();
@@ -629,18 +635,29 @@ public class MainActivity extends ActionBarActivity {
 					.getText().toString());
 			int numberOfCols = Integer.parseInt(textMatriceNumberOfCols
 					.getText().toString());
+			String command1 = "K1=int(rand(" + numberOfRows + ","
+					+ numberOfCols + ")*10);";
+			String command2 = "K2=int(rand(" + numberOfRows + ","
+					+ numberOfCols + ")*10);";
+			String command3 = "inv(inv(inv(inv(inv(inv(inv(inv(inv(inv(K1*K2))))))))));";
+			
+			try {
+				Scilab sci = new Scilab();
 
-			int[][] a = new int[numberOfRows][numberOfCols];
-			int[][] b = new int[numberOfRows][numberOfCols];
-			for (int i = 0; i < numberOfRows; i++) {
-				for (int j = 0; j < numberOfCols; j++) {
-					a[i][j] = 2;
-					b[i][j] = 4;
+				if (sci.open()) {
+					/* Send a Scilab instruction */
+					sci.exec(command1);
+					sci.exec(command2);
+					sci.exec(command3);
+
+					sci.close();
+				} else {
+					System.out.println("Could not start Scilab ");
 				}
+			} catch (org.scilab.modules.javasci.JavasciException e) {
+				System.err.println("An exception occurred: "
+						+ e.getLocalizedMessage());
 			}
-
-			int[][] c = multiply(a, b);
-
 			return true;
 		}
 
@@ -723,8 +740,9 @@ public class MainActivity extends ActionBarActivity {
 				textB.setText("B: ");
 				textC.setText("C: ");
 				textD.setText("D: ");
-				textTotal.setText("TOTAL: ");			}
+				textTotal.setText("TOTAL: ");
+			}
 		});
-	
+
 	}
 }
