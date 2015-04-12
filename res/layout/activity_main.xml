@@ -24,7 +24,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="80dp"
         android:layout_marginTop="5dp"
-        android:text="172.20.10.4" >
+        android:text="192.168.1.3" >
     </EditText>
 
    
