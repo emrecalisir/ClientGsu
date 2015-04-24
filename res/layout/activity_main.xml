@@ -24,29 +24,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="80dp"
         android:layout_marginTop="5dp"
-        android:text="192.168.1.3" >
-    </EditText>
-
-   
-
-    <EditText
-        android:id="@+id/editTextRows"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="200dp"
-        android:layout_marginTop="5dp"
-        android:text="100" >
-    </EditText>
-
-    <EditText
-        android:id="@+id/editTextCols"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="260dp"
-        android:layout_marginTop="5dp"
-        android:text="100" >
+        android:text="172.20.10.8" >
     </EditText>
 
     <Button
@@ -59,14 +37,24 @@
         android:text="@string/lblButtonDoLocally" />
     
      <Button
-        android:id="@+id/buttonMultiplyMatrices"
+        android:id="@+id/buttonJSciLocal"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="5dp"
         android:layout_marginTop="95dp"
-        android:text="@string/lblButtonMultiplyMatrices" />
+        android:text="@string/lblbuttonJSciLocal" />
      
+      <Button
+        android:id="@+id/buttonJSciServer"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="105dp"
+        android:layout_marginTop="95dp"
+        android:text="@string/lblbuttonJSciServer" />
+     
+      
       <Button
         android:id="@+id/buttonSend"
         style="?android:attr/buttonStyleSmall"
@@ -81,7 +69,7 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="90dp"
+        android:layout_marginLeft="105dp"
         android:layout_marginTop="140dp"
         android:text="@string/lblButtonSendRmi" />
 
@@ -99,7 +87,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="55dp"
+        android:layout_marginTop="5dp"
         android:text="SERVER" />
 
     <TextView
@@ -108,7 +96,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="75dp"
+        android:layout_marginTop="25dp"
         android:text="A" />
 
     <TextView
@@ -117,7 +105,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="95dp"
+        android:layout_marginTop="45dp"
         android:text="B" />
 
     <TextView
@@ -127,7 +115,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="115dp"
+        android:layout_marginTop="65dp"
         android:text="C" />
 
     <TextView
@@ -137,7 +125,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="135dp"
+        android:layout_marginTop="85dp"
         android:text="Total" />
 
     <TextView
@@ -145,8 +133,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="200dp"
-        android:layout_marginTop="155dp"
+        android:layout_marginLeft="210dp"
+        android:layout_marginTop="105dp"
         android:text="CLIENT" />
 
     <TextView
@@ -155,7 +143,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="175dp"
+        android:layout_marginTop="125dp"
         android:text="D" />
 
 </RelativeLayout>

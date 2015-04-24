@@ -58,6 +58,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.clientgsu.data.RectangleFace;
+import com.clientgsu.jscience.JScienceCalculation;
+import com.clientgsu.util.Util;
 import com.example.clientgsu.R;
 import com.geag.rmi.GeagRmiInterface;
 
@@ -67,8 +69,6 @@ public class MainActivity extends ActionBarActivity {
 	private ImageView img1;
 	private Bitmap bitmap;
 	private EditText textIp;
-	private EditText textMatriceNumberOfRows;
-	private EditText textMatriceNumberOfCols;
 	private TextView textA, textB, textC, textD, textTotal;
 	private List<RectangleFace> rectangleFaceList = null;
 
@@ -86,7 +86,7 @@ public class MainActivity extends ActionBarActivity {
 	Long energyInitial = 0L;
 	String imageRmiResponse = "";
 	String exceptionText = "";
-
+	double[][] a, b; 
 	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
@@ -117,9 +117,7 @@ public class MainActivity extends ActionBarActivity {
 			textC = (TextView) findViewById(R.id.TextViewC1);
 			textD = (TextView) findViewById(R.id.TextViewD1);
 			textTotal = (TextView) findViewById(R.id.TextViewTotal);
-
-			textMatriceNumberOfRows = (EditText) findViewById(R.id.editTextRows);
-			textMatriceNumberOfCols = (EditText) findViewById(R.id.editTextCols);
+			
 			final Button buttonSend = (Button) findViewById(R.id.buttonSend);
 
 			buttonSend.findViewById(R.id.buttonSend).setOnClickListener(
@@ -175,20 +173,45 @@ public class MainActivity extends ActionBarActivity {
 
 						}
 					});
-			findViewById(R.id.buttonMultiplyMatrices).setOnClickListener(
+			findViewById(R.id.buttonJSciLocal).setOnClickListener(
 					new View.OnClickListener() {
 						@Override
 						public void onClick(View view) {
 							new Thread() {
 								public void run() {
 									// TODO Run network requests here.
-									new MultiplyMatricesTask().execute("");
+									new JScienceTaskLocal().execute("");
+								}
+							}.start();
+
+						}
+					});
+			
+			findViewById(R.id.buttonJSciServer).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new JScienceTaskServer().execute("");
 								}
 							}.start();
 
 						}
 					});
 
+			a = new double[20][20];
+			b = new double[20][20];
+			Util util = new Util();
+
+			for (int i = 0; i < 20; i++) {
+				for (int j = 0; j < 20; j++) {
+					
+					a[i][j] = util.randInt(2, 5);
+					b[i][j] = util.randInt(2, 5);
+				}
+			}
 		} catch (Exception e) {
 			exceptionText = e.toString();
 			displayAlert();
@@ -619,33 +642,21 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
-	private class MultiplyMatricesTask extends AsyncTask<String, Void, Boolean> {
+	private class JScienceTaskLocal extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
 			clearTextBoxValues();
 			dStartTime = System.currentTimeMillis();
 
-			int numberOfRows = Integer.parseInt(textMatriceNumberOfRows
-					.getText().toString());
-			int numberOfCols = Integer.parseInt(textMatriceNumberOfCols
-					.getText().toString());
-
-			int[][] a = new int[numberOfRows][numberOfCols];
-			int[][] b = new int[numberOfRows][numberOfCols];
-			for (int i = 0; i < numberOfRows; i++) {
-				for (int j = 0; j < numberOfCols; j++) {
-					a[i][j] = 2;
-					b[i][j] = 4;
-				}
-			}
-
-			int[][] c = multiply(a, b);
+			JScienceCalculation jScienceCalculation = new JScienceCalculation();
+							
+			String result = jScienceCalculation.calculateWithJScience(a,b);
 
 			return true;
 		}
 
 		protected void onPostExecute(Boolean doInBackground) {
-			System.out.println("MultiplyMatricesTask completed");
+			System.out.println("JScienceTaskLocal completed");
 			runOnUiThread(new Runnable() {
 
 				@Override
@@ -657,6 +668,57 @@ public class MainActivity extends ActionBarActivity {
 			});
 
 		}
+	}
+	
+	private class JScienceTaskServer extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+			// clearTextBoxValues();
+			aStartTime = System.currentTimeMillis();
+
+			Looper.prepare();
+
+			try {
+				String serverIp = textIp.getText().toString();
+				CallHandler callHandler = new CallHandler();
+				Client client = new Client(serverIp, 7777, callHandler);
+				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
+						.getGlobal(GeagRmiInterface.class);
+
+				aEndTime = System.currentTimeMillis();
+
+				String res = geagRmiService.getResponseOfJScienceOperation(a, b);
+				cStartTime = System.currentTimeMillis();
+
+				
+				serverTimeLasted = res;
+
+				client.close();
+			} catch (IOException e) {
+				exceptionText = e.toString();
+				displayAlert();
+			} catch (Exception e) {
+				exceptionText = e.toString();
+				displayAlert();
+			}
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("JScienceServer completed");
+
+			new Thread() {
+				public void run() {
+					// TODO Run network requests here.
+
+					new UpdateFormTask().execute("");
+				}
+			}.start();
+
+		}
+
 	}
 
 	private String prepareRawDataOfImage() {
@@ -726,5 +788,35 @@ public class MainActivity extends ActionBarActivity {
 				textTotal.setText("TOTAL: ");			}
 		});
 	
+	}
+	
+	private class UpdateFormTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+
+					try {
+						cEndTime = System.currentTimeMillis();
+						textA.setText("A: " + (aEndTime - aStartTime) + " ms");
+						textB.setText("B: " + serverTimeLasted + " ms");
+						textC.setText("C: " + (cEndTime - cStartTime) + " ms");
+						textTotal.setText("TOTAL: " + (cEndTime - aStartTime) + " ms");
+
+					} catch (Exception e) {
+						exceptionText = e.toString();
+						displayAlert();
+					}
+				}
+			});
+			return true;
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+		}
+			
+		
+
 	}
 }

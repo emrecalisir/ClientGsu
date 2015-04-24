@@ -9,7 +9,8 @@
     <string name="lblButtonDoLocally">Client Face Det.</string>
     <string name="lblButtonCamera">Open Camera</string>
     <string name="lblButtonSendRmi">RMI Offl.</string>
-    <string name="lblButtonMultiplyMatrices">Client Multiply Mat. </string>
+    <string name="lblbuttonJSciLocal">JSci Local </string>
+    <string name="lblbuttonJSciServer">JSci Server </string>
     
 
 </resources>
