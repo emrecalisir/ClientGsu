@@ -13,8 +13,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import lipermi.handler.CallHandler;
-import lipermi.net.Client;
+import net.sf.lipermi.handler.CallHandler; 
+import net.sf.lipermi.net.Client;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.http.HttpResponse;
@@ -46,7 +46,6 @@ import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -69,7 +68,7 @@ public class MainActivity extends ActionBarActivity {
 	private ImageView img1;
 	private Bitmap bitmap;
 	private EditText textIp;
-	private TextView textA, textB, textC, textD, textTotal;
+	private TextView textA, textB, textC, textD, textTotal, textResult;
 	private List<RectangleFace> rectangleFaceList = null;
 
 	InputStream inputStream = null;
@@ -86,7 +85,9 @@ public class MainActivity extends ActionBarActivity {
 	Long energyInitial = 0L;
 	String imageRmiResponse = "";
 	String exceptionText = "";
-	double[][] a, b; 
+	double[][] a, b;
+	String resultOfCalculation = "";
+
 	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +118,8 @@ public class MainActivity extends ActionBarActivity {
 			textC = (TextView) findViewById(R.id.TextViewC1);
 			textD = (TextView) findViewById(R.id.TextViewD1);
 			textTotal = (TextView) findViewById(R.id.TextViewTotal);
-			
+			textResult = (TextView) findViewById(R.id.TextViewResult);
+
 			final Button buttonSend = (Button) findViewById(R.id.buttonSend);
 
 			buttonSend.findViewById(R.id.buttonSend).setOnClickListener(
@@ -186,7 +188,7 @@ public class MainActivity extends ActionBarActivity {
 
 						}
 					});
-			
+
 			findViewById(R.id.buttonJSciServer).setOnClickListener(
 					new View.OnClickListener() {
 						@Override
@@ -201,17 +203,7 @@ public class MainActivity extends ActionBarActivity {
 						}
 					});
 
-			a = new double[20][20];
-			b = new double[20][20];
-			Util util = new Util();
-
-			for (int i = 0; i < 20; i++) {
-				for (int j = 0; j < 20; j++) {
-					
-					a[i][j] = util.randInt(2, 5);
-					b[i][j] = util.randInt(2, 5);
-				}
-			}
+			initializeMatrices();
 		} catch (Exception e) {
 			exceptionText = e.toString();
 			displayAlert();
@@ -581,12 +573,12 @@ public class MainActivity extends ActionBarActivity {
 			// clearTextBoxValues();
 			aStartTime = System.currentTimeMillis();
 
-			Looper.prepare();
+			// Looper.prepare();
 
 			try {
 				String serverIp = textIp.getText().toString();
 				CallHandler callHandler = new CallHandler();
-				Client client = new Client(serverIp, 7777, callHandler);
+				Client client = new Client(serverIp, 55661, callHandler);
 				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
 						.getGlobal(GeagRmiInterface.class);
 
@@ -594,7 +586,7 @@ public class MainActivity extends ActionBarActivity {
 
 				aEndTime = System.currentTimeMillis();
 
-				String res = geagRmiService.getResponse(imageAsString);
+				String res = geagRmiService.getResponseOfFaceDetection(imageAsString);
 
 				cStartTime = System.currentTimeMillis();
 				rectangleFaceList = new ArrayList<RectangleFace>();
@@ -645,13 +637,21 @@ public class MainActivity extends ActionBarActivity {
 	private class JScienceTaskLocal extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
-			clearTextBoxValues();
-			dStartTime = System.currentTimeMillis();
+			try {
+				clearTextBoxValues();
+				dStartTime = System.currentTimeMillis();
 
-			JScienceCalculation jScienceCalculation = new JScienceCalculation();
-							
-			String result = jScienceCalculation.calculateWithJScience(a,b);
+				JScienceCalculation jScienceCalculation = new JScienceCalculation();
+				resultOfCalculation = jScienceCalculation.multiplyMatrices(a, b);
+				//String result = jScienceCalculation.multiplyPolynomes("3 4 5");			
+				//String result = jScienceCalculation.gaussianElimination();			
+				
+				
+			} catch (Exception e) {
+				exceptionText = e.toString();
+				displayAlert();
 
+			}
 			return true;
 		}
 
@@ -663,35 +663,50 @@ public class MainActivity extends ActionBarActivity {
 				public void run() {
 					dEndTime = System.currentTimeMillis();
 					textD.setText("D: " + (dEndTime - dStartTime) + " ms");
+					
+					if(resultOfCalculation!=""){
+						textResult.setText("Sol: " + resultOfCalculation);
+						resultOfCalculation="";
+					}
 
 				}
 			});
 
 		}
 	}
-	
+
 	private class JScienceTaskServer extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
 			// clearTextBoxValues();
-			aStartTime = System.currentTimeMillis();
-
-			Looper.prepare();
-
 			try {
+
+				aStartTime = System.currentTimeMillis();
+				/*
+				 * if (Looper.myLooper() == null) { Looper.prepare(); }
+				 */
 				String serverIp = textIp.getText().toString();
 				CallHandler callHandler = new CallHandler();
-				Client client = new Client(serverIp, 7777, callHandler);
+				Client client = new Client(serverIp, 55661, callHandler);
 				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
 						.getGlobal(GeagRmiInterface.class);
 
 				aEndTime = System.currentTimeMillis();
 
-				String res = geagRmiService.getResponseOfJScienceOperation(a, b);
-				cStartTime = System.currentTimeMillis();
-
+				//String res = geagRmiService
+						//.getResponseOfPolynomialMultiplicationWithJScience("3 4 5");
 				
-				serverTimeLasted = res;
+				String res = geagRmiService
+						.getResponseOfMatriceMultiplicationWithJScience(a, b);
+				String[] split = res.split(";");
+
+				if(split.length!=2)
+					return null;
+				
+				resultOfCalculation = split[0];
+				serverTimeLasted = split[1];
+
+				cStartTime = System.currentTimeMillis();
 
 				client.close();
 			} catch (IOException e) {
@@ -785,11 +800,12 @@ public class MainActivity extends ActionBarActivity {
 				textB.setText("B: ");
 				textC.setText("C: ");
 				textD.setText("D: ");
-				textTotal.setText("TOTAL: ");			}
+				textTotal.setText("TOTAL: ");
+			}
 		});
-	
+
 	}
-	
+
 	private class UpdateFormTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
@@ -802,7 +818,12 @@ public class MainActivity extends ActionBarActivity {
 						textA.setText("A: " + (aEndTime - aStartTime) + " ms");
 						textB.setText("B: " + serverTimeLasted + " ms");
 						textC.setText("C: " + (cEndTime - cStartTime) + " ms");
-						textTotal.setText("TOTAL: " + (cEndTime - aStartTime) + " ms");
+						textTotal.setText("TOTAL: " + (cEndTime - aStartTime)
+								+ " ms");
+						if(resultOfCalculation!=""){
+							textResult.setText("Sol: " + resultOfCalculation);
+							resultOfCalculation="";
+						}
 
 					} catch (Exception e) {
 						exceptionText = e.toString();
@@ -815,8 +836,20 @@ public class MainActivity extends ActionBarActivity {
 
 		protected void onPostExecute(Boolean doInBackground) {
 		}
-			
-		
 
+	}
+
+	private void initializeMatrices() {
+		a = new double[70][70];
+		b = new double[70][70];
+		Util util = new Util();
+
+		for (int i = 0; i < 70; i++) {
+			for (int j = 0; j < 70; j++) {
+
+				a[i][j] = util.randInt(2, 5);
+				b[i][j] = util.randInt(2, 5);
+			}
+		}
 	}
 }

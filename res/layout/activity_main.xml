@@ -24,7 +24,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="80dp"
         android:layout_marginTop="5dp"
-        android:text="172.20.10.8" >
+        android:text="192.168.1.2" >
     </EditText>
 
     <Button
@@ -50,7 +50,7 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="105dp"
+        android:layout_marginLeft="100dp"
         android:layout_marginTop="95dp"
         android:text="@string/lblbuttonJSciServer" />
      
@@ -61,7 +61,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="5dp"
-        android:layout_marginTop="140dp"
+        android:layout_marginTop="150dp"
         android:text="@string/lblButtonSend" />
       
     <Button
@@ -69,8 +69,8 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="105dp"
-        android:layout_marginTop="140dp"
+        android:layout_marginLeft="100dp"
+        android:layout_marginTop="150dp"
         android:text="@string/lblButtonSendRmi" />
 
     <ImageView
@@ -145,5 +145,14 @@
         android:layout_marginLeft="200dp"
         android:layout_marginTop="125dp"
         android:text="D" />
+    
+     <TextView
+        android:id="@+id/TextViewResult"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="200dp"
+        android:layout_marginTop="145dp"
+        android:text="Sol" />
 
 </RelativeLayout>

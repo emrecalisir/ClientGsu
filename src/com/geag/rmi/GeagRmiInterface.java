@@ -1,10 +1,12 @@
 package com.geag.rmi;
 
 public interface GeagRmiInterface {
-	public String getResponse(String data);
-	
-	public String getResponseOfScientificOperation(String data);
-	
-	public String getResponseOfJScienceOperation(double[][] a, double[][] b);
+	public String getResponseOfFaceDetection(String data);
+
+	public String getResponseOfMatriceMultiplicationWithScilab(String data); 
+
+	public String getResponseOfPolynomialMultiplicationWithJScience(String coeffs);
+
+	public String getResponseOfMatriceMultiplicationWithJScience(double[][] a, double[][] b);
 
 }

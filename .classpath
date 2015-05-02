@@ -13,7 +13,8 @@
 	<classpathentry exported="true" kind="lib" path="C:/Users/emre2/Desktop/DEV/libs/httpcomponents-client-4.3.3-bin/httpcomponents-client-4.3.3/lib/commons-codec-1.9.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry kind="lib" path="C:/Users/emre2/Desktop/DEV/OpenCV-2.4.10-android-sdk/OpenCV-2.4.10-android-sdk/sdk/java/bin/opencv library - 2.4.10.jar"/>
-	<classpathentry exported="true" kind="lib" path="libs/lipermi-0.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jscience.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6"/>
+	<classpathentry exported="true" kind="lib" path="libs/lipermi.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
