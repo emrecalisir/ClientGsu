@@ -7,6 +7,6 @@ public interface GeagRmiInterface {
 
 	public String getResponseOfPolynomialMultiplicationWithJScience(String coeffs);
 
-	public String getResponseOfMatriceMultiplicationWithJScience(double[][] a, double[][] b);
+	public String getResponseOfMatriceMultiplicationWithJScience(double[][] a);
 
 }

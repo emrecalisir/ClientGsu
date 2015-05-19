@@ -13,7 +13,7 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
+        android:layout_marginLeft="2dp"
         android:layout_marginTop="5dp"
         android:text="@string/lblButtonBrowse" />
 
@@ -32,46 +32,54 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
+        android:layout_marginLeft="2dp"
         android:layout_marginTop="50dp"
         android:text="@string/lblButtonDoLocally" />
-    
-     <Button
-        android:id="@+id/buttonJSciLocal"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="95dp"
-        android:text="@string/lblbuttonJSciLocal" />
-     
-      <Button
-        android:id="@+id/buttonJSciServer"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="100dp"
-        android:layout_marginTop="95dp"
-        android:text="@string/lblbuttonJSciServer" />
-     
-      
-      <Button
+
+    <Button
         android:id="@+id/buttonSend"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="150dp"
+        android:layout_marginLeft="2dp"
+        android:layout_marginTop="95dp"
         android:text="@string/lblButtonSend" />
-      
+
     <Button
         android:id="@+id/buttonSendRmi"
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="100dp"
-        android:layout_marginTop="150dp"
+        android:layout_marginLeft="95dp"
+        android:layout_marginTop="95dp"
         android:text="@string/lblButtonSendRmi" />
+
+    <Button
+        android:id="@+id/buttonJSciLocal"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:layout_marginTop="160dp"
+        android:text="@string/lblbuttonJSciLocal" />
+
+    <Button
+        android:id="@+id/buttonJSciServer"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="95dp"
+        android:layout_marginTop="160dp"
+        android:text="@string/lblbuttonJSciServer" />
+
+    <Button
+        android:id="@+id/buttonSendSocket"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="175dp"
+        android:layout_marginTop="160dp"
+        android:text="@string/lblButtonSendSocket" />
 
     <ImageView
         android:id="@+id/ImageView01"
@@ -133,7 +141,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="210dp"
+        android:layout_marginLeft="200dp"
         android:layout_marginTop="105dp"
         android:text="CLIENT" />
 
@@ -145,8 +153,8 @@
         android:layout_marginLeft="200dp"
         android:layout_marginTop="125dp"
         android:text="D" />
-    
-     <TextView
+
+    <TextView
         android:id="@+id/TextViewResult"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

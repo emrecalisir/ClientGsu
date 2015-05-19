@@ -43,14 +43,13 @@ public class JScienceCalculation {
 	        }
 	        return px;
 	    }
-	public String multiplyMatrices(double[][] a, double[][] b) {
+	public String multiplyMatrices(double[][] a) {
 
 		Float64Matrix A = Float64Matrix.valueOf(a);
-		Float64Matrix B = Float64Matrix.valueOf(b);
-		Float64Matrix C = A.times(B);
-		Float64Matrix D = C.transpose();
+		Float64Matrix B = A.times(A);
+		Float64Matrix C = B.transpose();
 
-		return D.determinant().toString();
+		return C.determinant().toString();
 	}
 	
 	public String gaussianElimination(){

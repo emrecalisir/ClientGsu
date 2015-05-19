@@ -5,12 +5,13 @@
     <string name="action_settings">Settings</string>
     <string name="lblButton">Enter Server IP</string>
     <string name="lblButtonBrowse">Browse</string>
-    <string name="lblButtonSend">REST Offl.</string>
+    <string name="lblButtonSend">Face REST</string>
     <string name="lblButtonDoLocally">Client Face Det.</string>
     <string name="lblButtonCamera">Open Camera</string>
-    <string name="lblButtonSendRmi">RMI Offl.</string>
+    <string name="lblButtonSendRmi">Face RMI</string>
     <string name="lblbuttonJSciLocal">JSci Local </string>
-    <string name="lblbuttonJSciServer">JSci Server </string>
+    <string name="lblbuttonJSciServer">JSci RMI </string>
+    <string name="lblButtonSendSocket">JSci Socket </string>
     
 
 </resources>

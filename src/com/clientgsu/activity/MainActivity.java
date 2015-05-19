@@ -3,17 +3,22 @@ package com.clientgsu.activity;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import net.sf.lipermi.handler.CallHandler; 
+import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -66,16 +71,15 @@ public class MainActivity extends ActionBarActivity {
 
 	private static final int SELECT_PICTURE = 1;
 	private ImageView img1;
-	private Bitmap bitmap;
 	private EditText textIp;
 	private TextView textA, textB, textC, textD, textTotal, textResult;
 	private List<RectangleFace> rectangleFaceList = null;
 
 	InputStream inputStream = null;
 	BufferedInputStream bufferedInputStream = null;
-	private boolean isLocalProcessing = false;
-	Long aStartTime, aEndTime, cStartTime, cEndTime, dStartTime, dEndTime,
-			eStartTime, eEndTime = 0L;
+
+	private static Long aStartTime, aEndTime, cStartTime, cEndTime, dStartTime,
+			dEndTime, eStartTime, eEndTime = 0L;
 	InputStream byteInputStream = null;
 	ProgressDialog progress;
 	final String TAG = "Hello World";
@@ -85,8 +89,15 @@ public class MainActivity extends ActionBarActivity {
 	Long energyInitial = 0L;
 	String imageRmiResponse = "";
 	String exceptionText = "";
-	double[][] a, b;
+	double[][] a;
 	String resultOfCalculation = "";
+	List<NameValuePair> nameValuePairs = null;
+	Bitmap bitmap;
+	ByteArrayOutputStream stream;
+	byte[] byte_arr;
+	byte[] imageByte;
+	String imageAsString;
+	String res = "";
 
 	// private BatteryManager mBatteryManager = null;
 
@@ -203,6 +214,20 @@ public class MainActivity extends ActionBarActivity {
 						}
 					});
 
+			findViewById(R.id.buttonSendSocket).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new JScienceTaskSocket().execute("");
+								}
+							}.start();
+
+						}
+					});
+
 			initializeMatrices();
 		} catch (Exception e) {
 			exceptionText = e.toString();
@@ -300,15 +325,13 @@ public class MainActivity extends ActionBarActivity {
 			 * System.out.println("Remaining energy = " +
 			 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
 			 */
-			isLocalProcessing = false;
 
 			aStartTime = System.currentTimeMillis();
 			String imageAsString = "", line = "";
 			try {
 				imageAsString = prepareRawDataOfImage();
 
-				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(
-						1);
+				nameValuePairs = new ArrayList<NameValuePair>(1);
 
 				nameValuePairs.add(new BasicNameValuePair("imageContentData",
 						imageAsString));
@@ -393,63 +416,6 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
-	private class UpdateImageTask extends AsyncTask<String, Void, Boolean> {
-
-		protected Boolean doInBackground(String... string) {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-
-					try {
-
-						Bitmap createBitmap = Bitmap.createBitmap(
-								img1.getWidth(), img1.getHeight(),
-								Config.ARGB_8888);
-						Canvas canvas = new Canvas(createBitmap);
-						img1.draw(canvas);
-
-						Paint p = new Paint();
-						p.setColor(Color.GREEN);
-						p.setStyle(Paint.Style.STROKE);
-						int i = 0;
-
-						for (RectangleFace rectangleFace : rectangleFaceList) {
-							i++;
-							canvas.drawRect(rectangleFace.getX1(),
-									rectangleFace.getY1(),
-									rectangleFace.getX2(),
-									rectangleFace.getY2(), p);
-						}
-
-						img1.setImageBitmap(createBitmap);
-
-					} catch (Exception e) {
-						exceptionText = e.toString();
-						displayAlert();
-					}
-				}
-			});
-			return true;
-		}
-
-		protected void onPostExecute(Boolean doInBackground) {
-
-			if (!isLocalProcessing) {
-				cEndTime = System.currentTimeMillis();
-				textA.setText("A: " + (aEndTime - aStartTime) + " ms");
-				textB.setText("B: " + serverTimeLasted + " ms");
-				textC.setText("C: " + (cEndTime - cStartTime) + " ms");
-				textTotal.setText("TOTAL: " + (cEndTime - aStartTime) + " ms");
-
-			} else {
-				dEndTime = System.currentTimeMillis();
-				textD.setText("D: " + (dEndTime - dStartTime) + " ms");
-
-			}
-		}
-
-	}
-
 	private class LocalProcessingTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
@@ -460,7 +426,6 @@ public class MainActivity extends ActionBarActivity {
 				 * System.out.println("Remaining energy = " +
 				 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
 				 */
-				isLocalProcessing = true;
 
 				dStartTime = System.currentTimeMillis();
 				img1 = (ImageView) findViewById(R.id.ImageView01);
@@ -544,6 +509,7 @@ public class MainActivity extends ActionBarActivity {
 							(int) (myMidPoint.y + myEyesDistance));
 					rectangleFaceList.add(rectangleFace);
 				}
+				dEndTime = System.currentTimeMillis();
 
 			} catch (Exception e) {
 				exceptionText = e.toString();
@@ -557,12 +523,14 @@ public class MainActivity extends ActionBarActivity {
 
 			System.out.println("SendImageTask completed");
 
-			new Thread() {
+			runOnUiThread(new Runnable() {
+
+				@Override
 				public void run() {
-					// TODO Run network requests here.
-					new UpdateImageTask().execute("");
+					textD.setText("D: " + (dEndTime - dStartTime) + " ms");
+
 				}
-			}.start();
+			});
 
 		}
 	}
@@ -570,12 +538,10 @@ public class MainActivity extends ActionBarActivity {
 	private class RmiTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
-			// clearTextBoxValues();
-			aStartTime = System.currentTimeMillis();
-
-			// Looper.prepare();
 
 			try {
+				aStartTime = System.currentTimeMillis();
+
 				String serverIp = textIp.getText().toString();
 				CallHandler callHandler = new CallHandler();
 				Client client = new Client(serverIp, 55661, callHandler);
@@ -586,7 +552,7 @@ public class MainActivity extends ActionBarActivity {
 
 				aEndTime = System.currentTimeMillis();
 
-				String res = geagRmiService.getResponseOfFaceDetection(imageAsString);
+				res = geagRmiService.getResponseOfFaceDetection(imageAsString);
 
 				cStartTime = System.currentTimeMillis();
 				rectangleFaceList = new ArrayList<RectangleFace>();
@@ -606,8 +572,9 @@ public class MainActivity extends ActionBarActivity {
 					rectangleFaceList.add(rectFace);
 				}
 				serverTimeLasted = split[split.length - 1];
-
 				client.close();
+				cEndTime = System.currentTimeMillis();
+
 			} catch (IOException e) {
 				exceptionText = e.toString();
 				displayAlert();
@@ -642,11 +609,9 @@ public class MainActivity extends ActionBarActivity {
 				dStartTime = System.currentTimeMillis();
 
 				JScienceCalculation jScienceCalculation = new JScienceCalculation();
-				resultOfCalculation = jScienceCalculation.multiplyMatrices(a, b);
-				//String result = jScienceCalculation.multiplyPolynomes("3 4 5");			
-				//String result = jScienceCalculation.gaussianElimination();			
-				
-				
+				resultOfCalculation = jScienceCalculation.multiplyMatrices(a);
+
+				dEndTime = System.currentTimeMillis();
 			} catch (Exception e) {
 				exceptionText = e.toString();
 				displayAlert();
@@ -661,12 +626,11 @@ public class MainActivity extends ActionBarActivity {
 
 				@Override
 				public void run() {
-					dEndTime = System.currentTimeMillis();
 					textD.setText("D: " + (dEndTime - dStartTime) + " ms");
-					
-					if(resultOfCalculation!=""){
+
+					if (resultOfCalculation != "") {
 						textResult.setText("Sol: " + resultOfCalculation);
-						resultOfCalculation="";
+						resultOfCalculation = "";
 					}
 
 				}
@@ -678,37 +642,28 @@ public class MainActivity extends ActionBarActivity {
 	private class JScienceTaskServer extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
-			// clearTextBoxValues();
 			try {
 
 				aStartTime = System.currentTimeMillis();
-				/*
-				 * if (Looper.myLooper() == null) { Looper.prepare(); }
-				 */
 				String serverIp = textIp.getText().toString();
 				CallHandler callHandler = new CallHandler();
 				Client client = new Client(serverIp, 55661, callHandler);
 				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
 						.getGlobal(GeagRmiInterface.class);
-
 				aEndTime = System.currentTimeMillis();
-
-				//String res = geagRmiService
-						//.getResponseOfPolynomialMultiplicationWithJScience("3 4 5");
-				
 				String res = geagRmiService
-						.getResponseOfMatriceMultiplicationWithJScience(a, b);
+						.getResponseOfMatriceMultiplicationWithJScience(a);
+				cStartTime = System.currentTimeMillis();
 				String[] split = res.split(";");
 
-				if(split.length!=2)
+				if (split.length != 2)
 					return null;
-				
+
 				resultOfCalculation = split[0];
 				serverTimeLasted = split[1];
-
-				cStartTime = System.currentTimeMillis();
-
 				client.close();
+				cEndTime = System.currentTimeMillis();
+
 			} catch (IOException e) {
 				exceptionText = e.toString();
 				displayAlert();
@@ -736,20 +691,81 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
+	private class JScienceTaskSocket extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+			try {
+				aStartTime = System.currentTimeMillis();
+
+				String serverIp = textIp.getText().toString();
+
+				System.out.println("Connecting to " + serverIp + " on port "
+						+ 15001);
+				Socket client = new Socket(serverIp, 15002);
+				System.out.println("Just connected to "
+						+ client.getRemoteSocketAddress());
+				OutputStream outToServer = client.getOutputStream();
+				DataOutputStream out = new DataOutputStream(outToServer);
+
+				// out.writeUTF("Hello from " + client.getLocalSocketAddress());
+				ObjectOutputStream objectOutput = new ObjectOutputStream(
+						outToServer);
+				objectOutput.writeObject(a);
+				aEndTime = System.currentTimeMillis();
+
+				InputStream inFromServer = client.getInputStream();
+				DataInputStream in = new DataInputStream(inFromServer);
+				String res1 = in.readUTF();
+				cStartTime = System.currentTimeMillis();
+				System.out.println("res1" + res1);
+				String[] split = res1.split(";");
+
+				if (split.length != 2)
+					return null;
+
+				resultOfCalculation = split[0];
+				serverTimeLasted = split[1];
+
+				client.close();
+				cEndTime = System.currentTimeMillis();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return true;
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("JScienceSocket completed");
+
+			new Thread() {
+				public void run() {
+					// TODO Run network requests here.
+
+					new UpdateFormTask().execute("");
+				}
+			}.start();
+
+		}
+
+	}
+
 	private String prepareRawDataOfImage() {
+
 		img1 = (ImageView) findViewById(R.id.ImageView01);
 
-		Bitmap bitmap = ((BitmapDrawable) img1.getDrawable()).getBitmap();
+		bitmap = ((BitmapDrawable) img1.getDrawable()).getBitmap();
 
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		stream = new ByteArrayOutputStream();
+
 		bitmap.compress(Bitmap.CompressFormat.JPEG, 10, stream);
 
-		byte[] byte_arr = Arrays.copyOf(stream.toByteArray(), stream.size());
+		byte_arr = Arrays.copyOf(stream.toByteArray(), stream.size());
 
-		byte[] imageByte = Base64.encodeBase64(byte_arr);
+		imageByte = Base64.encodeBase64(byte_arr);
 
-		String imageAsString = new String(Hex.encodeHex(imageByte));
-		// String imageAsString = new String(imageByte);
+		imageAsString = new String(Hex.encodeHex(imageByte));
 
 		return imageAsString;
 	}
@@ -814,15 +830,24 @@ public class MainActivity extends ActionBarActivity {
 				public void run() {
 
 					try {
-						cEndTime = System.currentTimeMillis();
-						textA.setText("A: " + (aEndTime - aStartTime) + " ms");
-						textB.setText("B: " + serverTimeLasted + " ms");
-						textC.setText("C: " + (cEndTime - cStartTime) + " ms");
-						textTotal.setText("TOTAL: " + (cEndTime - aStartTime)
-								+ " ms");
-						if(resultOfCalculation!=""){
+						if (aEndTime != null && aStartTime != null)
+							textA.setText("A: " + (aEndTime - aStartTime)
+									+ " ms");
+
+						if (serverTimeLasted != null)
+							textB.setText("B: " + serverTimeLasted + " ms");
+
+						if (cEndTime != null && cStartTime != null)
+							textC.setText("C: " + (cEndTime - cStartTime)
+									+ " ms");
+
+						if (cEndTime != null && aStartTime != null)
+							textTotal.setText("TOTAL: "
+									+ (cEndTime - aStartTime) + " ms");
+
+						if (resultOfCalculation != "") {
 							textResult.setText("Sol: " + resultOfCalculation);
-							resultOfCalculation="";
+							resultOfCalculation = "";
 						}
 
 					} catch (Exception e) {
@@ -839,16 +864,65 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
+	private class UpdateImageTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+
+					try {
+
+						Bitmap createBitmap = Bitmap.createBitmap(
+								img1.getWidth(), img1.getHeight(),
+								Config.ARGB_8888);
+						Canvas canvas = new Canvas(createBitmap);
+						img1.draw(canvas);
+
+						Paint p = new Paint();
+						p.setColor(Color.GREEN);
+						p.setStyle(Paint.Style.STROKE);
+						int i = 0;
+
+						for (RectangleFace rectangleFace : rectangleFaceList) {
+							i++;
+							canvas.drawRect(rectangleFace.getX1(),
+									rectangleFace.getY1(),
+									rectangleFace.getX2(),
+									rectangleFace.getY2(), p);
+						}
+
+						img1.setImageBitmap(createBitmap);
+
+					} catch (Exception e) {
+						exceptionText = e.toString();
+						displayAlert();
+					}
+				}
+			});
+			return true;
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			cEndTime = System.currentTimeMillis();
+			textA.setText("A: " + (aEndTime - aStartTime) + " ms");
+			textB.setText("B: " + serverTimeLasted + " ms");
+			textC.setText("C: " + (cEndTime - cStartTime) + " ms");
+			textTotal.setText("TOTAL: " + (cEndTime - aStartTime) + " ms");
+
+		}
+
+	}
+
 	private void initializeMatrices() {
 		a = new double[70][70];
-		b = new double[70][70];
 		Util util = new Util();
 
 		for (int i = 0; i < 70; i++) {
 			for (int j = 0; j < 70; j++) {
 
 				a[i][j] = util.randInt(2, 5);
-				b[i][j] = util.randInt(2, 5);
 			}
 		}
 	}
