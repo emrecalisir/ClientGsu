@@ -60,7 +60,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="2dp"
-        android:layout_marginTop="160dp"
+        android:layout_marginTop="140dp"
         android:text="@string/lblbuttonJSciLocal" />
 
     <Button
@@ -69,7 +69,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="95dp"
-        android:layout_marginTop="160dp"
+        android:layout_marginTop="140dp"
         android:text="@string/lblbuttonJSciServer" />
 
     <Button
@@ -78,8 +78,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="175dp"
-        android:layout_marginTop="160dp"
+        android:layout_marginTop="140dp"
         android:text="@string/lblButtonSendSocket" />
+
+    <Button
+        android:id="@+id/buttonFaceWithDecide"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:layout_marginTop="185dp"
+        android:text="@string/lblbuttonFaceWithDecide" />
+
+    <Button
+        android:id="@+id/buttonJSciWithDecide"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="105dp"
+        android:layout_marginTop="185dp"
+        android:text="@string/lblbuttonJSciWithDecide" />
 
     <ImageView
         android:id="@+id/ImageView01"
@@ -90,21 +108,12 @@
         android:scaleType="matrix" />
 
     <TextView
-        android:id="@+id/TextViewServer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="200dp"
-        android:layout_marginTop="5dp"
-        android:text="SERVER" />
-
-    <TextView
         android:id="@+id/TextViewA1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="5dp"
         android:text="A" />
 
     <TextView
@@ -113,7 +122,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="25dp"
         android:text="B" />
 
     <TextView
@@ -123,7 +132,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="65dp"
+        android:layout_marginTop="45dp"
         android:text="C" />
 
     <TextView
@@ -133,17 +142,8 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="85dp"
+        android:layout_marginTop="65dp"
         android:text="Total" />
-
-    <TextView
-        android:id="@+id/TextViewClient"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="200dp"
-        android:layout_marginTop="105dp"
-        android:text="CLIENT" />
 
     <TextView
         android:id="@+id/TextViewD1"
@@ -151,7 +151,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="125dp"
+        android:layout_marginTop="85dp"
         android:text="D" />
 
     <TextView
@@ -160,7 +160,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="200dp"
-        android:layout_marginTop="145dp"
+        android:layout_marginTop="105dp"
         android:text="Sol" />
 
 </RelativeLayout>

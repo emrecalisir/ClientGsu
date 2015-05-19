@@ -12,6 +12,7 @@
     <string name="lblbuttonJSciLocal">JSci Local </string>
     <string name="lblbuttonJSciServer">JSci RMI </string>
     <string name="lblButtonSendSocket">JSci Socket </string>
-    
+    <string name="lblbuttonFaceWithDecide">Face Decide</string>
+    <string name="lblbuttonJSciWithDecide">JSci Decide</string>
 
 </resources>

@@ -1637,15 +1637,13 @@ containing a value of this type.
         public static final int myimage=0x7f020035;
     }
     public static final class id {
-        public static final int ImageView01=0x7f060047;
-        public static final int TextViewA1=0x7f060049;
-        public static final int TextViewB1=0x7f06004a;
-        public static final int TextViewC1=0x7f06004b;
-        public static final int TextViewClient=0x7f06004d;
+        public static final int ImageView01=0x7f060049;
+        public static final int TextViewA1=0x7f06004a;
+        public static final int TextViewB1=0x7f06004b;
+        public static final int TextViewC1=0x7f06004c;
         public static final int TextViewD1=0x7f06004e;
         public static final int TextViewResult=0x7f06004f;
-        public static final int TextViewServer=0x7f060048;
-        public static final int TextViewTotal=0x7f06004c;
+        public static final int TextViewTotal=0x7f06004d;
         public static final int action_bar=0x7f060031;
         public static final int action_bar_activity_content=0x7f060018;
         public static final int action_bar_container=0x7f060030;
@@ -1667,8 +1665,10 @@ containing a value of this type.
         public static final int buttonBrowse=0x7f06003f;
         public static final int buttonCamera=0x7f060056;
         public static final int buttonDoLocally=0x7f060041;
+        public static final int buttonFaceWithDecide=0x7f060047;
         public static final int buttonJSciLocal=0x7f060044;
         public static final int buttonJSciServer=0x7f060045;
+        public static final int buttonJSciWithDecide=0x7f060048;
         public static final int buttonSend=0x7f060042;
         public static final int buttonSendRmi=0x7f060043;
         public static final int buttonSendSocket=0x7f060046;
@@ -1855,8 +1855,10 @@ containing a value of this type.
         public static final int lblButtonSend=0x7f0b0014;
         public static final int lblButtonSendRmi=0x7f0b0017;
         public static final int lblButtonSendSocket=0x7f0b001a;
+        public static final int lblbuttonFaceWithDecide=0x7f0b001b;
         public static final int lblbuttonJSciLocal=0x7f0b0018;
         public static final int lblbuttonJSciServer=0x7f0b0019;
+        public static final int lblbuttonJSciWithDecide=0x7f0b001c;
     }
     public static final class style {
         /** 

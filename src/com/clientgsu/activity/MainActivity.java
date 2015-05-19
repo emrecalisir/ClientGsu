@@ -15,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,12 +23,15 @@ import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpConnectionParams;
@@ -47,6 +51,8 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.FaceDetector;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Bundle;
@@ -65,6 +71,7 @@ import com.clientgsu.data.RectangleFace;
 import com.clientgsu.jscience.JScienceCalculation;
 import com.clientgsu.util.Util;
 import com.example.clientgsu.R;
+import com.geag.engine.decide.GeagDecisionEngine;
 import com.geag.rmi.GeagRmiInterface;
 
 public class MainActivity extends ActionBarActivity {
@@ -98,6 +105,12 @@ public class MainActivity extends ActionBarActivity {
 	byte[] imageByte;
 	String imageAsString;
 	String res = "";
+	String urlString = "http://380dental.com/wp-content/themes/campbell/images/family_img.png";
+	int scale = -1;
+	int level = -1;
+	int voltage = -1;
+	int temp = -1;
+	Integer linkSpeed = -1;
 
 	// private BatteryManager mBatteryManager = null;
 
@@ -228,6 +241,34 @@ public class MainActivity extends ActionBarActivity {
 						}
 					});
 
+			findViewById(R.id.buttonFaceWithDecide).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new FaceDecideTask().execute("");
+								}
+							}.start();
+
+						}
+					});
+
+			findViewById(R.id.buttonJSciWithDecide).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new JSciDecideTask().execute("");
+								}
+							}.start();
+
+						}
+					});
+
 			initializeMatrices();
 		} catch (Exception e) {
 			exceptionText = e.toString();
@@ -238,10 +279,6 @@ public class MainActivity extends ActionBarActivity {
 
 	private void getBatteryInfo() {
 		BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
-			int scale = -1;
-			int level = -1;
-			int voltage = -1;
-			int temp = -1;
 
 			@Override
 			public void onReceive(Context context, Intent intent) {
@@ -249,11 +286,13 @@ public class MainActivity extends ActionBarActivity {
 				scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
 				temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 				voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-				Log.e("BatteryManager", "level is " + level + "/" + scale
-						+ ", temp is " + temp + ", voltage is " + voltage);
-				System.out.println("BatteryManager level is " + level + "/"
-						+ scale + ", temp is " + temp + ", voltage is "
-						+ voltage);
+				WifiManager wifiManager = (WifiManager) context
+						.getSystemService(WIFI_SERVICE);
+				WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+				if (wifiInfo != null) {
+					linkSpeed = wifiInfo.getLinkSpeed(); // measured using
+															// WifiInfo.LINK_SPEED_UNITS
+				}
 			}
 		};
 		IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -751,6 +790,66 @@ public class MainActivity extends ActionBarActivity {
 
 	}
 
+	private class FaceDecideTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+
+			GeagDecisionEngine geagDecisionEngine = new GeagDecisionEngine();
+
+			double w = 0, di = 0, bw = 0, ss = 0, sm = 0;
+
+			// bw = calculateBandwidth();
+			getBatteryInfo();
+			
+			bw = linkSpeed;
+			if (geagDecisionEngine.offloadingImprovesPerformance(w, di, bw, ss,
+					sm)) {
+				new Thread() {
+					public void run() {
+						// TODO Run network requests here.
+						new SendImageTask().execute("");
+					}
+				}.start();
+
+			}
+
+			else {
+				new Thread() {
+					public void run() {
+						// TODO Run network requests here.
+						new LocalProcessingTask().execute("");
+					}
+				}.start();
+			}
+
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("FaceDecideTask completed");
+
+		}
+
+	}
+
+	private class JSciDecideTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("JSciDecideTask completed");
+
+		}
+
+	}
+
 	private String prepareRawDataOfImage() {
 
 		img1 = (ImageView) findViewById(R.id.ImageView01);
@@ -926,4 +1025,5 @@ public class MainActivity extends ActionBarActivity {
 			}
 		}
 	}
+
 }
