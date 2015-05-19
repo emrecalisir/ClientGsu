@@ -72,6 +72,7 @@ import com.clientgsu.jscience.JScienceCalculation;
 import com.clientgsu.util.Util;
 import com.example.clientgsu.R;
 import com.geag.engine.decide.GeagDecisionEngine;
+import com.geag.linpack.Linpack;
 import com.geag.rmi.GeagRmiInterface;
 
 public class MainActivity extends ActionBarActivity {
@@ -79,7 +80,7 @@ public class MainActivity extends ActionBarActivity {
 	private static final int SELECT_PICTURE = 1;
 	private ImageView img1;
 	private EditText textIp;
-	private TextView textA, textB, textC, textD, textTotal, textResult;
+	private TextView textA, textB, textC, textD, textTotal, textResult, textLinpack;
 	private List<RectangleFace> rectangleFaceList = null;
 
 	InputStream inputStream = null;
@@ -111,7 +112,9 @@ public class MainActivity extends ActionBarActivity {
 	int voltage = -1;
 	int temp = -1;
 	Integer linkSpeed = -1;
-
+String cpuSpeed = "";
+String memory = "";
+String linkpackResult = "";
 	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
@@ -143,6 +146,7 @@ public class MainActivity extends ActionBarActivity {
 			textD = (TextView) findViewById(R.id.TextViewD1);
 			textTotal = (TextView) findViewById(R.id.TextViewTotal);
 			textResult = (TextView) findViewById(R.id.TextViewResult);
+			textLinpack = (TextView) findViewById(R.id.TextViewLinpack);
 
 			final Button buttonSend = (Button) findViewById(R.id.buttonSend);
 
@@ -263,6 +267,20 @@ public class MainActivity extends ActionBarActivity {
 								public void run() {
 									// TODO Run network requests here.
 									new JSciDecideTask().execute("");
+								}
+							}.start();
+
+						}
+					});
+			
+			findViewById(R.id.buttonLinpack).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new LinpackTask().execute("");
 								}
 							}.start();
 
@@ -800,8 +818,11 @@ public class MainActivity extends ActionBarActivity {
 
 			// bw = calculateBandwidth();
 			getBatteryInfo();
-			
+			getCpuInfo();
+
 			bw = linkSpeed;
+			sm = Integer.parseInt(cpuSpeed);
+
 			if (geagDecisionEngine.offloadingImprovesPerformance(w, di, bw, ss,
 					sm)) {
 				new Thread() {
@@ -838,6 +859,7 @@ public class MainActivity extends ActionBarActivity {
 
 		protected Boolean doInBackground(String... string) {
 
+	
 			return true;
 
 		}
@@ -845,6 +867,40 @@ public class MainActivity extends ActionBarActivity {
 		protected void onPostExecute(Boolean doInBackground) {
 
 			System.out.println("JSciDecideTask completed");
+
+		}
+
+	}
+	
+	private class LinpackTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+
+	
+			for(int i = 0; i<30; i++) {
+				Linpack linpack = new Linpack();
+				linpack.run_benchmark();
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("LinpackTask completed");
+			MainActivity.this.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					if (linkpackResult != null)
+						textLinpack.setText(linkpackResult);
+				}
+			});
 
 		}
 
@@ -1024,6 +1080,54 @@ public class MainActivity extends ActionBarActivity {
 				a[i][j] = util.randInt(2, 5);
 			}
 		}
+	}
+
+	public void getCpuInfo() {
+	    try {
+	        Process proc = Runtime.getRuntime().exec("cat /proc/cpuinfo");
+	        InputStream is = proc.getInputStream();
+	        cpuSpeed = getStringFromInputStream(is);
+	    } 
+	    catch (IOException e) {
+	        Log.e(TAG, "------ getCpuInfo " + e.getMessage());
+	    }
+	}
+
+	public void getMemoryInfo() {
+	    try {
+	        Process proc = Runtime.getRuntime().exec("cat /proc/meminfo");
+	        InputStream is = proc.getInputStream();
+	        memory = getStringFromInputStream(is);
+	    } 
+	    catch (IOException e) {
+	        Log.e(TAG, "------ getMemoryInfo " + e.getMessage());
+	    }
+	}
+
+	private static String getStringFromInputStream(InputStream is) {
+	    StringBuilder sb = new StringBuilder();
+	    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+	    String line = null;
+
+	    try {
+	        while((line = br.readLine()) != null) {
+	            sb.append(line);
+	            sb.append("\n");
+	        }
+	    } 
+	    catch (IOException e) {
+	    }
+	    finally {
+	        if(br != null) {
+	            try {
+	                br.close();
+	            } 
+	            catch (IOException e) {
+	            }
+	        }
+	    }       
+
+	    return sb.toString();
 	}
 
 }

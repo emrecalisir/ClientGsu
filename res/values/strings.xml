@@ -14,5 +14,6 @@
     <string name="lblButtonSendSocket">JSci Socket </string>
     <string name="lblbuttonFaceWithDecide">Face Decide</string>
     <string name="lblbuttonJSciWithDecide">JSci Decide</string>
-
+    <string name="lblbuttonLinpack">Linpack</string>
+    
 </resources>
