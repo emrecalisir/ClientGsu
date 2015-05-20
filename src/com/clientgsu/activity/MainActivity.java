@@ -14,8 +14,10 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,6 +64,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.textservice.TextInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -73,6 +76,7 @@ import com.clientgsu.util.Util;
 import com.example.clientgsu.R;
 import com.geag.engine.decide.GeagDecisionEngine;
 import com.geag.linpack.Linpack;
+import com.geag.ocr.Tess;
 import com.geag.rmi.GeagRmiInterface;
 
 public class MainActivity extends ActionBarActivity {
@@ -80,7 +84,8 @@ public class MainActivity extends ActionBarActivity {
 	private static final int SELECT_PICTURE = 1;
 	private ImageView img1;
 	private EditText textIp;
-	private TextView textA, textB, textC, textD, textTotal, textResult, textLinpack;
+	private TextView textA, textB, textC, textD, textTotal, textResult,
+			textLinpack;
 	private List<RectangleFace> rectangleFaceList = null;
 
 	InputStream inputStream = null;
@@ -97,6 +102,7 @@ public class MainActivity extends ActionBarActivity {
 	Long energyInitial = 0L;
 	String imageRmiResponse = "";
 	String exceptionText = "";
+	String ocrText = "";
 	double[][] a;
 	String resultOfCalculation = "";
 	List<NameValuePair> nameValuePairs = null;
@@ -112,9 +118,11 @@ public class MainActivity extends ActionBarActivity {
 	int voltage = -1;
 	int temp = -1;
 	Integer linkSpeed = -1;
-String cpuSpeed = "";
-String memory = "";
-String linkpackResult = "";
+	String cpuSpeed = "";
+	String memory = "";
+	String linkpackResult = "";
+	public static String pingError = null;
+
 	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
@@ -272,7 +280,7 @@ String linkpackResult = "";
 
 						}
 					});
-			
+
 			findViewById(R.id.buttonLinpack).setOnClickListener(
 					new View.OnClickListener() {
 						@Override
@@ -286,6 +294,34 @@ String linkpackResult = "";
 
 						}
 					});
+			
+			findViewById(R.id.buttonOcrLocal).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new LocalOcrTask().execute("");
+								}
+							}.start();
+
+						}
+					});
+
+			findViewById(R.id.buttonOcrServer).setOnClickListener(
+					new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							new Thread() {
+								public void run() {
+									// TODO Run network requests here.
+									new ServerOcrTask().execute("");
+								}
+							}.start();
+
+						}
+					});
 
 			initializeMatrices();
 		} catch (Exception e) {
@@ -293,28 +329,6 @@ String linkpackResult = "";
 			displayAlert();
 
 		}
-	}
-
-	private void getBatteryInfo() {
-		BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
-
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-				scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-				temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-				voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
-				WifiManager wifiManager = (WifiManager) context
-						.getSystemService(WIFI_SERVICE);
-				WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-				if (wifiInfo != null) {
-					linkSpeed = wifiInfo.getLinkSpeed(); // measured using
-															// WifiInfo.LINK_SPEED_UNITS
-				}
-			}
-		};
-		IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-		registerReceiver(batteryReceiver, filter);
 	}
 
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -820,6 +834,24 @@ String linkpackResult = "";
 			getBatteryInfo();
 			getCpuInfo();
 
+			try {
+				
+				ping(textIp.getText().toString());
+				
+				//ping("google.com");
+				//pingHost("192.168.1.3");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// executeCmd(execString, false);
+
+			// execCmd();
+
 			bw = linkSpeed;
 			sm = Integer.parseInt(cpuSpeed);
 
@@ -859,7 +891,6 @@ String linkpackResult = "";
 
 		protected Boolean doInBackground(String... string) {
 
-	
 			return true;
 
 		}
@@ -871,13 +902,12 @@ String linkpackResult = "";
 		}
 
 	}
-	
+
 	private class LinpackTask extends AsyncTask<String, Void, Boolean> {
 
 		protected Boolean doInBackground(String... string) {
 
-	
-			for(int i = 0; i<30; i++) {
+			for (int i = 0; i < 30; i++) {
 				Linpack linpack = new Linpack();
 				linpack.run_benchmark();
 				try {
@@ -906,6 +936,91 @@ String linkpackResult = "";
 
 	}
 
+	private class LocalOcrTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+
+			try {
+				// clearTextBoxValues();
+				/*
+				 * System.out.println("Remaining energy = " +
+				 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
+				 */
+
+				dStartTime = System.currentTimeMillis();
+
+				Tess tess = new Tess();
+				ocrText = tess.performOcrOperation("http://i.stack.imgur.com/1hVxt.png");
+				
+				dEndTime = System.currentTimeMillis();
+
+			} catch (Exception e) {
+				exceptionText = e.toString();
+				displayAlert();
+			}
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("LocalOcrTask completed");
+
+			runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					textD.setText("D: " + (dEndTime - dStartTime) + " ms");
+					displayOcrText();
+				}
+			});
+
+		}
+	}
+	
+	private class ServerOcrTask extends AsyncTask<String, Void, Boolean> {
+
+		protected Boolean doInBackground(String... string) {
+
+			try {
+				// clearTextBoxValues();
+				/*
+				 * System.out.println("Remaining energy = " +
+				 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
+				 */
+
+				dStartTime = System.currentTimeMillis();
+
+				Tess tess = new Tess();
+				ocrText = tess.performOcrOperation("http://i.stack.imgur.com/1hVxt.png");
+				
+				dEndTime = System.currentTimeMillis();
+
+			} catch (Exception e) {
+				exceptionText = e.toString();
+				displayAlert();
+			}
+			return true;
+
+		}
+
+		protected void onPostExecute(Boolean doInBackground) {
+
+			System.out.println("ServerOcrTask completed");
+
+			runOnUiThread(new Runnable() {
+
+				@Override
+				public void run() {
+					textD.setText("D: " + (dEndTime - dStartTime) + " ms");
+					displayOcrText();
+				}
+			});
+
+		}
+	}
+
+	
 	private String prepareRawDataOfImage() {
 
 		img1 = (ImageView) findViewById(R.id.ImageView01);
@@ -930,6 +1045,15 @@ String linkpackResult = "";
 			@Override
 			public void run() {
 				Toast.makeText(MainActivity.this, exceptionText, 10000).show();
+			}
+		});
+	}
+	
+	public void displayOcrText() {
+		MainActivity.this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(MainActivity.this, ocrText, 10000).show();
 			}
 		});
 	}
@@ -1083,51 +1207,177 @@ String linkpackResult = "";
 	}
 
 	public void getCpuInfo() {
-	    try {
-	        Process proc = Runtime.getRuntime().exec("cat /proc/cpuinfo");
-	        InputStream is = proc.getInputStream();
-	        cpuSpeed = getStringFromInputStream(is);
-	    } 
-	    catch (IOException e) {
-	        Log.e(TAG, "------ getCpuInfo " + e.getMessage());
-	    }
+		try {
+			Process proc = Runtime.getRuntime().exec("cat /proc/cpuinfo");
+			InputStream is = proc.getInputStream();
+			cpuSpeed = getStringFromInputStream(is);
+		} catch (IOException e) {
+			Log.e(TAG, "------ getCpuInfo " + e.getMessage());
+		}
 	}
 
 	public void getMemoryInfo() {
-	    try {
-	        Process proc = Runtime.getRuntime().exec("cat /proc/meminfo");
-	        InputStream is = proc.getInputStream();
-	        memory = getStringFromInputStream(is);
-	    } 
-	    catch (IOException e) {
-	        Log.e(TAG, "------ getMemoryInfo " + e.getMessage());
-	    }
+		try {
+			Process proc = Runtime.getRuntime().exec("cat /proc/meminfo");
+			InputStream is = proc.getInputStream();
+			memory = getStringFromInputStream(is);
+		} catch (IOException e) {
+			Log.e(TAG, "------ getMemoryInfo " + e.getMessage());
+		}
 	}
 
 	private static String getStringFromInputStream(InputStream is) {
-	    StringBuilder sb = new StringBuilder();
-	    BufferedReader br = new BufferedReader(new InputStreamReader(is));
-	    String line = null;
+		StringBuilder sb = new StringBuilder();
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		String line = null;
 
-	    try {
-	        while((line = br.readLine()) != null) {
-	            sb.append(line);
-	            sb.append("\n");
-	        }
-	    } 
-	    catch (IOException e) {
-	    }
-	    finally {
-	        if(br != null) {
-	            try {
-	                br.close();
-	            } 
-	            catch (IOException e) {
-	            }
-	        }
-	    }       
+		try {
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+				sb.append("\n");
+			}
+		} catch (IOException e) {
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+				}
+			}
+		}
 
-	    return sb.toString();
+		return sb.toString();
 	}
 
+	private void getBatteryInfo() {
+		BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+				scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+				temp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+				voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
+				WifiManager wifiManager = (WifiManager) context
+						.getSystemService(WIFI_SERVICE);
+				WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+				if (wifiInfo != null) {
+					linkSpeed = wifiInfo.getLinkSpeed(); // measured using
+															// WifiInfo.LINK_SPEED_UNITS
+				}
+			}
+		};
+		IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+		registerReceiver(batteryReceiver, filter);
+	}
+
+	public static int pingHost(String host) throws IOException,
+			InterruptedException {
+		Runtime runtime = Runtime.getRuntime();
+		Process proc = runtime.exec("ping -c 1 " + host);
+		proc.waitFor();
+		int exit = proc.exitValue();
+		return exit;
+	}
+
+	public String ping(String host) throws IOException, InterruptedException {
+		StringBuffer echo = new StringBuffer();
+		Runtime runtime = Runtime.getRuntime();
+		long pingStartTime = System.currentTimeMillis();
+		Process proc = runtime.exec("ping -c 10 -s 6000 google.com");
+		proc.waitFor();
+		long pingEndTime = System.currentTimeMillis();
+		long diff = pingEndTime - pingStartTime;
+		System.out.println(diff);
+		int exit = proc.exitValue();
+		if (exit == 0) {
+			InputStreamReader reader = new InputStreamReader(
+					proc.getInputStream());
+			BufferedReader buffer = new BufferedReader(reader);
+			String line = "";
+			while ((line = buffer.readLine()) != null) {
+				echo.append(line + "\n");
+			}
+			return getPingStats(echo.toString());
+		} else if (exit == 1) {
+			pingError = "failed, exit = 1";
+			return null;
+		} else {
+			pingError = "error, exit = 2";
+			return null;
+		}
+	}
+
+	public static String getPingStats(String s) {
+		if (s.contains("0% packet loss")) {
+			int start = s.indexOf("/mdev = ");
+			int end = s.indexOf(" ms\n", start);
+			s = s.substring(start + 8, end);
+			String stats[] = s.split("/");
+			return stats[2];
+		} else if (s.contains("100% packet loss")) {
+			pingError = "100% packet loss";
+			return null;
+		} else if (s.contains("% packet loss")) {
+			pingError = "partial packet loss";
+			return null;
+		} else if (s.contains("unknown host")) {
+			pingError = "unknown host";
+			return null;
+		} else {
+			pingError = "unknown error in getPingStats";
+			return null;
+		}
+	}
+
+	public static String executeCmd(String cmd, boolean sudo) {
+		try {
+
+			Process p;
+			if (!sudo)
+				p = Runtime.getRuntime().exec(cmd);
+			else {
+				p = Runtime.getRuntime().exec(new String[] { "su", "-c", cmd });
+			}
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(
+					p.getInputStream()));
+
+			String s;
+			String res = "";
+			while ((s = stdInput.readLine()) != null) {
+				res += s + "\n";
+			}
+			p.destroy();
+			return res;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return "";
+
+	}
+
+	public void execCmd() {
+
+		InetAddress in;
+		in = null;
+		InetAddress[] allByName = null;
+		// Definimos la ip de la cual haremos el ping
+		try {
+			allByName = InetAddress.getAllByName(textIp.getText().toString());
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// Definimos un tiempo en el cual ha de responder
+		try {
+			if (in.isReachable(50000)) {
+				System.out.println("Responde OK");
+			} else {
+				System.out.println("No responde: Time out");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println(e.toString());
+		}
+	}
 }

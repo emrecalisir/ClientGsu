@@ -24,7 +24,7 @@
         android:layout_alignParentLeft="true"
         android:layout_marginLeft="80dp"
         android:layout_marginTop="5dp"
-        android:text="192.168.1.2" >
+        android:text="192.168.1.3" >
     </EditText>
 
     <Button
@@ -108,12 +108,30 @@
         android:layout_marginTop="185dp"
         android:text="@string/lblbuttonLinpack" />
     
+            <Button
+        android:id="@+id/buttonOcrLocal"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:layout_marginTop="230dp"
+        android:text="@string/lblbuttonOcrLocal" />
+
+    <Button
+        android:id="@+id/buttonOcrServer"
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="105dp"
+        android:layout_marginTop="230dp"
+        android:text="@string/lblbuttonOcrServer" />
+    
     <ImageView
         android:id="@+id/ImageView01"
         android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_height="200dp"
+        android:layout_below="@+id/buttonOcrLocal"
         android:layout_marginLeft="5dp"
-        android:layout_marginTop="200dp"
         android:scaleType="matrix" />
 
     <TextView

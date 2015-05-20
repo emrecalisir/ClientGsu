@@ -15,5 +15,7 @@
     <string name="lblbuttonFaceWithDecide">Face Decide</string>
     <string name="lblbuttonJSciWithDecide">JSci Decide</string>
     <string name="lblbuttonLinpack">Linpack</string>
+    <string name="lblbuttonOcrLocal">Ocr Local</string>
+    <string name="lblbuttonOcrServer">Ocr Server</string>
     
 </resources>

@@ -15,5 +15,10 @@
 	<classpathentry kind="lib" path="C:/Users/emre2/Desktop/DEV/OpenCV-2.4.10-android-sdk/OpenCV-2.4.10-android-sdk/sdk/java/bin/opencv library - 2.4.10.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/jscience.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/lipermi.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/commons-io-2.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jai_imageio.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/jna.jar"/>
+	<classpathentry exported="true" kind="lib" path="libs/tess4j.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
