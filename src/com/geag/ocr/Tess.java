@@ -1,51 +1,55 @@
 package com.geag.ocr;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
-import javax.imageio.ImageIO;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.os.Environment;
+import android.util.Log;
 
-import net.sourceforge.tess4j.ITesseract;
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
+import com.googlecode.tesseract.android.TessBaseAPI;
+
 
 public class Tess {
-	public String performOcrOperation(String imageUrl) {
+	public static final String TAG = "TESS";
+	
+	public String tess2Operation(String dataPath, String lang, Bitmap bitmap ){
 
-		File imageFile = null;
-		String result = "";
-		try {
 
-			URL url = new URL(imageUrl);
-			BufferedImage img = ImageIO.read(url);
-			imageFile = new File("downloaded.png");
-			
-			imageFile = new File("eurotext.png");
-			
-			ImageIO.write(img, "png", imageFile);
+			// Convert to ARGB_8888, required by tess
+			bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-			ITesseract instance = new Tesseract(); // JNA Interface Mapping
-			// ITesseract instance = new Tesseract1(); // JNA Direct Mapping
-			long a1 = System.currentTimeMillis();
+		
 
-			result = instance.doOCR(imageFile);
-			
-			long a2 = System.currentTimeMillis();
+		// _image.setImageBitmap( bitmap );
+		
+		Log.v(TAG, "Before baseApi");
 
-			long diff = a2 - a1;
-			System.out.println(result);
-		} catch (TesseractException e) {
-			System.err.println(e.getMessage());
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-		}
-		return result;
+		TessBaseAPI baseApi = new TessBaseAPI();
+		baseApi.setDebug(true);
+		baseApi.init(dataPath, lang);
+		baseApi.setImage(bitmap);
+		
+		String recognizedText = baseApi.getUTF8Text();
+		
+		baseApi.end();
+
+		// You now have the text in recognizedText var, you can do anything with it.
+		// We will display a stripped out trimmed alpha-numeric version of it (if lang is eng)
+		// so that garbage doesn't make it to the display.
+
+		Log.v(TAG, "OCRED TEXT: " + recognizedText);
+		
+		return recognizedText;
 	}
 	
 	public static void main(String[] args) {
 		Tess tess = new Tess();
-		tess.performOcrOperation("");
+		//tess.performOcrOperation("");
+		
 	}
 
 

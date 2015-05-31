@@ -20,3 +20,6 @@ Communication Types:
 1. RMI: For the RMI operations, start or debug the project.
 2. REST: For the REST operations, start or debug the Apache Tomcat Server
  
+ 
+For Tesseract configuration
+Put the tessdata folder into AndroidPhone\Internal storage\Main folder.

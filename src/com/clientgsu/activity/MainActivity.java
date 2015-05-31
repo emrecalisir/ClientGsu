@@ -44,6 +44,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
@@ -122,7 +123,10 @@ public class MainActivity extends ActionBarActivity {
 	String memory = "";
 	String linkpackResult = "";
 	public static String pingError = null;
-
+	public static final String DATA_PATH = Environment.getExternalStorageDirectory().toString() + "/Main/"; 
+	//public static final String DATA_PATH ="/mnt/sdcard/ClientGsu/";
+	public static final String lang = "eng";
+	
 	// private BatteryManager mBatteryManager = null;
 
 	protected void onCreate(Bundle savedInstanceState) {
@@ -324,6 +328,39 @@ public class MainActivity extends ActionBarActivity {
 					});
 
 			initializeMatrices();
+			
+			File file1 = new File(DATA_PATH + "tessdata/" + lang + ".traineddata");
+			if (!file1.exists()) {
+				try {
+
+					AssetManager assetManager = getAssets();
+					//InputStream in = assetManager.open("tessdata/" + lang + ".traineddata");
+					
+					InputStream in = getResources().getAssets().open("tessdata/" + lang + ".traineddata");
+					//GZIPInputStream gin = new GZIPInputStream(in);
+					
+				    File file = new File(DATA_PATH
+							+ "tessdata/" + lang + ".traineddata");
+
+					OutputStream out = new FileOutputStream(DATA_PATH
+							+ "tessdata/" + lang + ".traineddata");
+
+					// Transfer bytes from in to out
+					byte[] buf = new byte[1024];
+					int len;
+					//while ((lenf = gin.read(buff)) > 0) {
+					while ((len = in.read(buf)) > 0) {
+						out.write(buf, 0, len);
+					}
+					in.close();
+					//gin.close();
+					out.close();
+					
+					Log.v(TAG, "Copied " + lang + " traineddata");
+				} catch (IOException e) {
+					Log.e(TAG, "Was unable to copy " + lang + " traineddata " + e.toString());
+				}
+			}
 		} catch (Exception e) {
 			exceptionText = e.toString();
 			displayAlert();
@@ -949,9 +986,15 @@ public class MainActivity extends ActionBarActivity {
 
 				dStartTime = System.currentTimeMillis();
 
-				Tess tess = new Tess();
-				ocrText = tess.performOcrOperation("http://i.stack.imgur.com/1hVxt.png");
+				img1 = (ImageView) findViewById(R.id.ImageView01);
+
+				Bitmap bitmap = ((BitmapDrawable) img1.getDrawable())
+						.getBitmap();
+
 				
+				Tess tess = new Tess();
+				//ocrText = tess.performOcrOperation("http://i.stack.imgur.com/1hVxt.png");
+				ocrText = tess.tess2Operation(DATA_PATH, lang, bitmap);
 				dEndTime = System.currentTimeMillis();
 
 			} catch (Exception e) {
@@ -983,18 +1026,34 @@ public class MainActivity extends ActionBarActivity {
 		protected Boolean doInBackground(String... string) {
 
 			try {
-				// clearTextBoxValues();
-				/*
-				 * System.out.println("Remaining energy = " +
-				 * BatteryManager.BATTERY_PROPERTY_CURRENT_NOW + "nWh");
-				 */
 
-				dStartTime = System.currentTimeMillis();
+				aStartTime = System.currentTimeMillis();
 
-				Tess tess = new Tess();
-				ocrText = tess.performOcrOperation("http://i.stack.imgur.com/1hVxt.png");
+				String serverIp = textIp.getText().toString();
+				CallHandler callHandler = new CallHandler();
+				Client client = new Client(serverIp, 55661, callHandler);
+				GeagRmiInterface geagRmiService = (GeagRmiInterface) client
+						.getGlobal(GeagRmiInterface.class);
+
+				String imageAsString = prepareRawDataOfImage();
+
+				aEndTime = System.currentTimeMillis();
+			
+				res = geagRmiService.getResponseOfOcr(imageAsString);
 				
-				dEndTime = System.currentTimeMillis();
+				cStartTime = System.currentTimeMillis();
+				
+				if(res==null)
+					return false;
+				
+				String[] split = res.split(";");
+
+				ocrText = split[0];
+				serverTimeLasted = split[split.length - 1];
+
+				client.close();
+											
+				cEndTime = System.currentTimeMillis();
 
 			} catch (Exception e) {
 				exceptionText = e.toString();
@@ -1012,7 +1071,7 @@ public class MainActivity extends ActionBarActivity {
 
 				@Override
 				public void run() {
-					textD.setText("D: " + (dEndTime - dStartTime) + " ms");
+					new UpdateImageTask().execute("");
 					displayOcrText();
 				}
 			});

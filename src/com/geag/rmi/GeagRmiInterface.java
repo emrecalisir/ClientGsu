@@ -1,6 +1,7 @@
 package com.geag.rmi;
 
 public interface GeagRmiInterface {
+	
 	public String getResponseOfFaceDetection(String data);
 
 	public String getResponseOfMatriceMultiplicationWithScilab(String data); 
@@ -9,6 +10,6 @@ public interface GeagRmiInterface {
 
 	public String getResponseOfMatriceMultiplicationWithJScience(double[][] a);
 
-	public String getResponseOfOcrDetection(String fileUrl);
+	public String getResponseOfOcr(String imageData);
 
 }
